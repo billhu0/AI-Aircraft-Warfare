@@ -183,7 +183,7 @@ def main():
         delay = 100
         
         running = True
-        newState = state.state()
+        newState = state.state(mePos=(me.rect.left, me.rect.top))
 
         while running:
             # action = random.choice(["Right","Left","Down","Up","Bomb"])
@@ -364,6 +364,7 @@ def main():
                         if enemy_hit:
                             b.active = False
                             for e in enemy_hit:
+                                
                                 if e in mid_enemies or e in big_enemies:
                                     e.hit = True
                                     e.energy -= 1
@@ -510,7 +511,40 @@ def main():
                 # 绘制得分
                 score_text = score_font.render("Score : %s" % str(score), True, WHITE)
                 screen.blit(score_text, (10, 5))
-                newState.assignData(observation=[]) #暂时这么写
+
+                enemyPos = []
+                for enemy_1 in small_enemies.sprites():
+                    if enemy_1.rect.top > 0:
+                        # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                for enemy_1 in mid_enemies.sprites():
+                    if enemy_1.rect.top > 0:
+                        # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                for enemy_1 in big_enemies.sprites():
+                    if enemy_1.rect.top > 0:
+                        # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                
+                bullet_supply_pos = None
+                if bullet_supply.active:
+                    if bullet_supply.rect.top > 0:
+                        bullet_supply_pos = (bullet_supply.rect.left, bullet_supply.rect.top)
+
+                bomb_supply_pos = None
+                if bomb_supply.active:
+                    if bomb_supply.rect.top > 0:
+                        bomb_supply_pos = (bomb_supply.rect.left, bomb_supply.rect.top)
+
+                newState.assignData(score=score, 
+                                    mePos=(me.rect.left, me.rect.top),
+                                    enemy_num=len(enemyPos), 
+                                    enemyPos=enemyPos, 
+                                    life_num=life_num, 
+                                    bullet_supply=bullet_supply.active, 
+                                    bomb_num=bomb_num, 
+                                    bullet_supply_pos=bullet_supply_pos, 
+                                    bomb_supply_pos=bomb_supply_pos) #暂时这么写
                 QL.update(currentState,action,newState,score)
             # 绘制游戏结束画面
             elif life_num == 0:
