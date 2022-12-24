@@ -85,7 +85,6 @@ class approximateQlearning(QLearning):
     def computeValueFromQValues(self, state):
         maxValue = float('-Inf')
         for action in self.actions:
-            ##1
             maxValue = max(maxValue, self.getQValue(state, action))
         return maxValue
 
