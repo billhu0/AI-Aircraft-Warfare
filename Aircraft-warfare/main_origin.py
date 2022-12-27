@@ -75,6 +75,12 @@ def add_big_enemies(group1, group2, num):
 def inc_speed(target, inc):
     for each in target:
         each.speed += inc
+        
+def print_green(s: str, end: str or None = '\n') -> None:
+    print("\033[37;42m{}\033[0m ".format(s), end=end)
+
+def print_red(s: str, end: str or None = '\n') -> None:
+    print("\033[37;41m{}\033[0m ".format(s), end=end)
 
 
 def main():
@@ -237,23 +243,20 @@ def main():
                 me.invincible = False
                 pygame.time.set_timer(INVINCIBLE_TIME, 0)
         
-        # print("\033[37;42m top={}, bottom={}, left={}, right={} \033[0m ".format(me.rect.top, me.rect.bottom, me.rect.left, me.rect.right))
+        print_green("Me top={}, left={} ".format(me.rect.top, me.rect.left), end='')
+        # print_green('bullet_supply:{}'.format(bullet_supply.active), end='') # 是否存在子弹补给
+        # print_green('bomb_supply:{}'.format(bomb_supply.active), end='') # 是否存在子弹补给
+        print_green("Bomb num:{}".format(bomb_num), end='')
         for enemy_1 in small_enemies.sprites():
             if enemy_1.rect.top > 0:
-                print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
-        # for enemy_1 in mid_enemies.sprites():
-        #     if enemy_1.rect.top > 0:
-        #         print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
-        # print('bullet_supply:', bullet_supply.active) # 是否存在子弹补给
-        # print('bomb_supply:',bomb_supply.active) # 是否存在子弹补给
-
-        # print('is_double_bullet:', is_double_bullet) # 是否存在子弹补给
-
-        if bomb_supply.rect.top > 0 and bomb_supply.active:
-            print("\033[37;41m bomb_supply left={}, top={}; \033[0m ".format(bomb_supply.rect.left, bomb_supply.rect.top))
-
-        if bullet_supply.rect.top > 0 and bullet_supply.active:
-            print("\033[37;41m bullet_supply left={}, top={}; \033[0m ".format(bullet_supply.rect.left, bullet_supply.rect.top))
+                print_red("small left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        for enemy_1 in mid_enemies.sprites():
+            if enemy_1.rect.top > 0:
+                print_red("mid left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        for enemy_1 in big_enemies.sprites():
+            if enemy_1.rect.top > 0:
+                print_red("big left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        print()
 
         # 根据用户的得分增加难度
         if level == 1 and score > 50000:
