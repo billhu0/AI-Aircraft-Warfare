@@ -184,11 +184,10 @@ def main():
         
         running = True
         newState = state.state(mePos=(me.rect.left, me.rect.top))
-
         while running:
-            # action = random.choice(["Right","Left","Down","Up","Bomb"])
+            action = random.choice(["Right","Left","Down","Up","Bomb"]) # weight 定义没写
             currentState = newState
-            action = QL.getAction(currentState)
+            # action = QL.getAction(currentState)
             for event in pygame.event.get():
                 
                 if event.type == pygame.locals.QUIT:
@@ -536,16 +535,16 @@ def main():
                     if bomb_supply.rect.top > 0:
                         bomb_supply_pos = (bomb_supply.rect.left, bomb_supply.rect.top)
 
-                newState.assignData(score=score, 
-                                    mePos=(me.rect.left, me.rect.top),
-                                    enemy_num=len(enemyPos), 
-                                    enemyPos=enemyPos, 
-                                    life_num=life_num, 
-                                    bullet_supply=bullet_supply.active, 
-                                    bomb_num=bomb_num, 
-                                    bullet_supply_pos=bullet_supply_pos, 
-                                    bomb_supply_pos=bomb_supply_pos) #暂时这么写
-                QL.update(currentState,action,newState,score)
+                # newState.assignData(score=score, 
+                #                     mePos=(me.rect.left, me.rect.top),
+                #                     enemy_num=len(enemyPos), 
+                #                     enemyPos=enemyPos, 
+                #                     life_num=life_num, 
+                #                     bullet_supply=bullet_supply.active, 
+                #                     bomb_num=bomb_num, 
+                #                     bullet_supply_pos=bullet_supply_pos, 
+                #                     bomb_supply_pos=bomb_supply_pos) #暂时这么写
+                # QL.update(currentState,action,newState,score)
             # 绘制游戏结束画面
             elif life_num == 0:
                 # 背景音乐停止
@@ -614,7 +613,7 @@ def main():
 
                 # pygame.quit()
                 # sys.exit()     
-                QL.update(currentState, action, newState, -10) #暂时这么写
+                # QL.update(currentState, action, newState, -10) #暂时这么写
                 break
                 # return
                         # 绘制暂停按钮
