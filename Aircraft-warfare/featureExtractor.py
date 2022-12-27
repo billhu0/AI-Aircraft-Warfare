@@ -75,6 +75,7 @@ def getFeatures(state,action):
 
         else:
             feature["bomb"] = 0
+    return feature
     
 
 
