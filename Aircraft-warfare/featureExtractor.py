@@ -1,6 +1,9 @@
 import util,pandas,math
 def find_the_nearest_plane(state,action):
-    pass
+    state.enemyPos.sort(key = lambda x:manhattanDistance(state.mePos,x))
+    if len(state.enemyPos) < 3:
+        return state.enemyPos
+    return state.enemyPos[0:3]
 def plane_move(pos1,move):
     if move == "Up":
         return (pos1[0],pos1[1]-1)
@@ -16,6 +19,8 @@ def plane_move(pos1,move):
         return pos1
 def calculate_distance_score(pos1,pos2,move):
     #此函数计算我方飞机和其他飞机的距离分数，在小于某个阈值时，我方飞机偏向于远离其他飞机，大于某个阈值时，我方飞机偏向于靠近其他飞机（尽量采取左右移动）
+    if pos2 == None:
+        return 0
     if manhattanDistance(pos1,pos2) <20:
         if manhattanDistance(plane_move(pos1,move),pos2) > manhattanDistance(pos1,pos2):
             return 10
@@ -53,7 +58,11 @@ def getFeatures(state,action):
         position = state.mePos
         bombs_pos = state.bombs
         double_bullet_pos = state.double_bullet
-        enemyPos_1 , enemyPos_2 , enemyPos_3 = find_the_nearest_plane(state,action)
+        enemyPosList = state.enemyPos.copy()
+        enemyPosList.sort(key = lambda x:manhattanDistance(state.mePos,x))
+        enemyPos_1 = enemyPosList[0]
+        enemyPos_2 = enemyPosList[1] if len(enemyPosList) > 1 else None
+        enemyPos_3 = enemyPosList[2] if len(enemyPosList) > 2 else None
         feature["distance_score"] = calculate_distance_score(position,enemyPos_1,action) + gama*calculate_distance_score(position,enemyPos_2,action) + gama*gama*calculate_distance_score(position,enemyPos_3,action)
         feature["get_bombs"] = calculate_get_gameprops(position,bombs_pos,action)
         feature["get_double_bullet"] = calculate_get_gameprops(position,double_bullet_pos,action)
