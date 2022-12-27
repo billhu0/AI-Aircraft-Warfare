@@ -2,15 +2,15 @@ import util,pandas,math
 def find_the_nearest_plane(state,action):
     pass
 def plane_move(pos1,move):
-    if move == "up":
+    if move == "Up":
         return (pos1[0],pos1[1]-1)
-    elif move == "down":
+    elif move == "Down":
         return (pos1[0],pos1[1]+1)
-    elif move == "left":
+    elif move == "Left":
         return (pos1[0]-1,pos1[1])
-    elif move == "right":
+    elif move == "Right":
         return (pos1[0]+1,pos1[1])
-    elif move == "bomb":
+    elif move == "Bomb":
         return pos1
     else:
         return pos1
@@ -22,7 +22,7 @@ def calculate_distance_score(pos1,pos2,move):
         else:
             return 100
     else:
-        if move != "left" and move != "right":
+        if move != "Left" and move != "Right":
             return 10
         else:
             if manhattanDistance(plane_move(pos1,move),pos2) < manhattanDistance(pos1,pos2):
@@ -49,7 +49,7 @@ def getFeatures(state,action):
     feature = util.Counter()
     gama = 0.7
     #feature1：计算我放飞机到最近的三个敌机之间的距离分数
-    if action != "bomb":
+    if action != "Bomb":
         position = state.mePos
         bombs_pos = state.bombs
         double_bullet_pos = state.double_bullet
