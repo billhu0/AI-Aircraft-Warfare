@@ -17,6 +17,12 @@ import state
 
 bullets = []
 
+def print_green(s: str, end: str or None = '\n') -> None:
+    print("\033[37;42m{}\033[0m ".format(s), end=end)
+
+def print_red(s: str, end: str or None = '\n') -> None:
+    print("\033[37;41m{}\033[0m ".format(s), end=end)
+
 
 class PlaneWar:
 
@@ -99,7 +105,6 @@ class PlaneWar:
         self.paused_rect = self.pause_nor_image.get_rect()
         self.paused_rect.left, self.paused_rect.top = self.width - self.paused_rect.width - 10, 10
         self.paused_image = self.pause_nor_image
-
         self.bomb_rect = self.bomb_image.get_rect()
 
         # 每30秒发放一个补给包
@@ -126,10 +131,9 @@ class PlaneWar:
 
         # 用于切换图片
         self.switch_image = True
-
         self.delay = 100
 
-    def main(self):
+    def start(self):
         # 初始化一些东西
         self.init_planes()
 
@@ -143,17 +147,18 @@ class PlaneWar:
         self.clock = pygame.time.Clock()
         pygame.mixer.music.play(-1)
 
-        # Main loop
+        # Main loop 主循环, 循环一次画一帧
         while True:
             self._handle_events()
             self._add_difficulty()
-            self.screen.blit(self.background, (0, 0))
+
+            self.print_info()
 
             if not self.paused and self.life_num:
                 self.move_me()
-                self.draw_frame()
+                self._draw_frame()
             elif self.life_num == 0:
-                self.draw_game_over()
+                self._draw_game_over()
 
             self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -167,6 +172,69 @@ class PlaneWar:
 
             pygame.display.flip()
             self.clock.tick(60)
+            
+    def train(self):
+        
+        QL = q_learning.approximateQlearning()
+        for i in range(3):
+        
+            # 初始化一些东西
+            self.init_planes()
+
+            # Initialize game status 初始化游戏状态信息
+            self.score: int = 0  # 分数
+            self.life_num: int = 3  # 剩余命的数量
+            self.paused: bool = False  # 是否处于暂停状态
+            self.level: int = 1  # 难度等级
+            self.bomb_num: int = 3  # 炸弹(可清空全屏飞机)数量
+            self.is_double_bullet: bool = False  # 是否处于超级子弹模式(一次发左右2颗子弹)
+            self.clock = pygame.time.Clock()
+            pygame.mixer.music.play(-1)
+
+            newState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
+            
+            while True:
+                action = random.choice(['left', 'right', 'up', 'down', 'bomb'])
+                currentState = newState
+                
+                self._handle_events()
+                self._add_difficulty()
+
+                self.print_info()
+
+                if not self.paused and self.life_num:
+                    self.move_action(action)
+                    self._draw_frame()
+                elif self.life_num == 0:
+                    self._draw_game_over()
+
+                self.screen.blit(self.paused_image, self.paused_rect)
+
+                # 切换图片
+                if not (self.delay % 5):
+                    self.switch_image = not self.switch_image
+
+                self.delay -= 1
+                if not self.delay:
+                    self.delay = 100
+
+                pygame.display.flip()
+                self.clock.tick(60)
+
+    def print_info(self) -> None:
+        """Print一些信息"""
+        print_green("Me top={}, left={} ".format(self.me.rect.top, self.me.rect.left), end='')
+        print_green("Bomb {}".format(self.bomb_num), end='')
+        for enemy_1 in self.small_enemies.sprites():
+            if enemy_1.rect.top > 0:
+                print_red("small left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        for enemy_1 in self.mid_enemies.sprites():
+            if enemy_1.rect.top > 0:
+                print_red("mid left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        for enemy_1 in self.big_enemies.sprites():
+            if enemy_1.rect.top > 0:
+                print_red("big left={}, top={} ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
+        print()
 
     def _handle_events(self) -> None:
         """
@@ -260,10 +328,24 @@ class PlaneWar:
         if key_pressed[pygame.K_d] or key_pressed[pygame.K_RIGHT]:
             self.me.moveRight()
 
-    def draw_frame(self):
+    def move_action(self, action: str):
+        """Move the plane by the given action. 根据指定的操作移动飞机"""
+        if action == 'up':
+            self.me.moveUp()
+        elif action == 'down':
+            self.me.moveDown()
+        elif action == 'left':
+            self.me.moveLeft()
+        elif action == 'right':
+            self.me.moveRight()
+
+    def _draw_frame(self):
         """Calculate a frame (including positions and collisions) and render it. 计算物体位置(含碰撞检测)并渲染一帧"""
 
         global bullets
+        
+        # 清屏
+        self.screen.blit(self.background, (0, 0))
 
         # 绘制全屏炸弹补给并检测是否获得
         if self.bomb_supply.active:
@@ -446,17 +528,23 @@ class PlaneWar:
         score_text = self.score_font.render('Score : %s' % str(self.score), True, (255, 255, 255))
         self.screen.blit(score_text, (10, 5))
 
-    def draw_game_over(self) -> None:
+    def _draw_game_over(self) -> None:
         """
         When game over, this function is called to display the game over page and the score.
         """
+        
+        # 清屏
+        self.screen.blit(self.background, (0, 0))
+        
+        # 停止播放音乐和音效, 停止计时器
         pygame.mixer.music.stop()
         pygame.mixer.stop()
         pygame.time.set_timer(self.SUPPLY_TIME, 0)
 
+        record_score = 0
         if not self.recorded:
             self.recorded = True
-            record_score = 0
+    
             # 读取历史最高得分
             with open('record.txt', 'r') as f:
                 record_score = int(f.read())
@@ -496,7 +584,7 @@ class PlaneWar:
             if self.again_rect.left < pos[0] < self.again_rect.right and \
                     self.again_rect.top < pos[1] < self.again_rect.bottom:
                 # 调用main函数，重新开始游戏
-                self.main()
+                self.start()
             # 如果用户点击“结束游戏”
             elif self.gameover_rect.left < pos[0] < self.gameover_rect.right and \
                     self.gameover_rect.top < pos[1] < self.gameover_rect.bottom:
@@ -530,7 +618,7 @@ class PlaneWar:
 if __name__ == '__main__':
     try:
         game = PlaneWar()
-        game.main()
+        game.train()
     except SystemExit:
         pass
     except:
