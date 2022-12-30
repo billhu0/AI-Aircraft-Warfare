@@ -1,5 +1,6 @@
 import sys
 import random
+import time
 import traceback
 import pygame
 import pygame.locals
@@ -73,9 +74,16 @@ class PlaneWar:
         self.bomb_font = pygame.font.Font('font/font.ttf', 48)
         self.gameover_font = pygame.font.Font('font/font.ttf', 48)
 
-    def init_planes(self) -> None:
-        """Generate enemy aircraft and my aircraft 生成敌机和我方飞机"""
+    def init_game(self) -> None:
+        """
+        This function is called at the beginning of a game.
+        It generates enemy aircraft, bullets, as well as initializes timers and game status information.
+        在一局游戏开始前会调用这个函数.
+        这个函数会生成我方飞机、敌机，以及初始化计时器和游戏状态信息.
+        (可以观察这个method中出现的变量, 游戏状态信息可以这么获取.
+        """
 
+        # Generate enemy aircraft and my aircraft 生成敌机和我方飞机
         self.me = myplane.MyPlane((self.width, self.height))  # 我方飞机
 
         self.enemies = pygame.sprite.Group()  # 敌方飞机(所有飞机)
@@ -133,10 +141,6 @@ class PlaneWar:
         self.switch_image = True
         self.delay = 100
 
-    def start(self):
-        # 初始化一些东西
-        self.init_planes()
-
         # Initialize game status 初始化游戏状态信息
         self.score: int = 0  # 分数
         self.life_num: int = 3  # 剩余命的数量
@@ -146,6 +150,10 @@ class PlaneWar:
         self.is_double_bullet: bool = False  # 是否处于超级子弹模式(一次发左右2颗子弹)
         self.clock = pygame.time.Clock()
         pygame.mixer.music.play(-1)
+
+    def start(self):
+        # Initialize game
+        self.init_game()
 
         # Main loop 主循环, 循环一次画一帧
         while True:
@@ -159,6 +167,22 @@ class PlaneWar:
                 self._draw_frame()
             elif self.life_num == 0:
                 self._draw_game_over()
+                # 检测用户的鼠标操作
+                # 如果用户按下鼠标左键
+                if pygame.mouse.get_pressed()[0]:
+                    pos = pygame.mouse.get_pos()
+                    # 如果用户点击“重新开始”
+                    if self.again_rect.left < pos[0] < self.again_rect.right and \
+                            self.again_rect.top < pos[1] < self.again_rect.bottom:
+                        # 调用main函数，重新开始游戏
+                        self.start()
+                    # 如果用户点击“结束游戏”
+                    elif self.gameover_rect.left < pos[0] < self.gameover_rect.right and \
+                            self.gameover_rect.top < pos[1] < self.gameover_rect.bottom:
+                        # 退出游戏
+                        pygame.quit()
+                        sys.exit()
+                        # 绘制暂停按钮
 
             self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -176,37 +200,39 @@ class PlaneWar:
     def train(self):
         
         QL = q_learning.approximateQlearning()
-        for i in range(3):
+        for _ in range(3):
         
-            # 初始化一些东西
-            self.init_planes()
-
-            # Initialize game status 初始化游戏状态信息
-            self.score: int = 0  # 分数
-            self.life_num: int = 3  # 剩余命的数量
-            self.paused: bool = False  # 是否处于暂停状态
-            self.level: int = 1  # 难度等级
-            self.bomb_num: int = 3  # 炸弹(可清空全屏飞机)数量
-            self.is_double_bullet: bool = False  # 是否处于超级子弹模式(一次发左右2颗子弹)
-            self.clock = pygame.time.Clock()
-            pygame.mixer.music.play(-1)
+            # Initialize game
+            self.init_game()
 
             newState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
             
+            counter = 0
+            action = 'stay'
+            currentState = None
+            
             while True:
-                action = random.choice(['left', 'right', 'up', 'down', 'bomb'])
-                currentState = newState
+                
+                # 每一帧都计算state相关信息可能会导致数据量太大，所以每隔几帧才计算以下
+                counter += 1
+                if counter % 5 == 0:
+                    action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
+                    currentState = newState
+                    self.print_info()
                 
                 self._handle_events()
                 self._add_difficulty()
-
-                self.print_info()
 
                 if not self.paused and self.life_num:
                     self.move_action(action)
                     self._draw_frame()
                 elif self.life_num == 0:
+                    # 结束游戏之后开始下一局训练
                     self._draw_game_over()
+                    pygame.display.flip()
+                    print('Game ended. Wait 3s.')
+                    time.sleep(3)
+                    break
 
                 self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -268,14 +294,14 @@ class PlaneWar:
                         self.pause_image = self.resume_nor_image
                     else:
                         self.pause_image = self.pause_nor_image
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if self.bomb_num:
-                        self.bomb_num -= 1
-                        self.sounds['bomb'].play()
-                        for each in self.enemies:
-                            if each.rect.bottom > 0:
-                                each.active = False
+            # elif event.type == pygame.KEYDOWN:
+            #     if event.key == pygame.K_SPACE:
+            #         if self.bomb_num:
+            #             self.bomb_num -= 1
+            #             self.sounds['bomb'].play()
+            #             for each in self.enemies:
+            #                 if each.rect.bottom > 0:
+            #                     each.active = False
             elif event.type == self.SUPPLY_TIME:
                 self.sounds['supply'].play()
                 if random.choice([True, False]):
@@ -330,7 +356,9 @@ class PlaneWar:
 
     def move_action(self, action: str):
         """Move the plane by the given action. 根据指定的操作移动飞机"""
-        if action == 'up':
+        if action == 'stay':
+            pass
+        elif action == 'up':
             self.me.moveUp()
         elif action == 'down':
             self.me.moveDown()
@@ -338,6 +366,15 @@ class PlaneWar:
             self.me.moveLeft()
         elif action == 'right':
             self.me.moveRight()
+        elif action == 'bomb':
+            if self.bomb_num:
+                self.bomb_num -= 1
+                self.sounds['bomb'].play()
+                for each in self.enemies:
+                    if each.rect.bottom > 0:
+                        each.active = False
+        else:
+            raise KeyError('Unknown action type: {}'.format(action))
 
     def _draw_frame(self):
         """Calculate a frame (including positions and collisions) and render it. 计算物体位置(含碰撞检测)并渲染一帧"""
@@ -571,27 +608,10 @@ class PlaneWar:
         self.again_rect.left, self.again_rect.top = (self.width - self.again_rect.width) // 2, score_rect2.bottom + 50
         self.screen.blit(self.again_image, self.again_rect)
 
-        self.gameover_rect.left, self.gameover_rect.top = (
-                                                                      self.width - self.again_rect.width) // 2, self.again_rect.bottom + 10
+        self.gameover_rect.left, self.gameover_rect.top = (self.width - self.again_rect.width) // 2, self.again_rect.bottom + 10
         self.screen.blit(self.gameover_image, self.gameover_rect)
 
-        # 检测用户的鼠标操作
-        # 如果用户按下鼠标左键
-        if pygame.mouse.get_pressed()[0]:
-            # 获取鼠标坐标
-            pos = pygame.mouse.get_pos()
-            # 如果用户点击“重新开始”
-            if self.again_rect.left < pos[0] < self.again_rect.right and \
-                    self.again_rect.top < pos[1] < self.again_rect.bottom:
-                # 调用main函数，重新开始游戏
-                self.start()
-            # 如果用户点击“结束游戏”
-            elif self.gameover_rect.left < pos[0] < self.gameover_rect.right and \
-                    self.gameover_rect.top < pos[1] < self.gameover_rect.bottom:
-                # 退出游戏
-                pygame.quit()
-                sys.exit()
-                # 绘制暂停按钮
+
 
     def _add_small_enemies(self, num: int) -> None:
         """Add a given number of small-enemies to the game. 添加指定数量的小型敌机"""
@@ -618,7 +638,9 @@ class PlaneWar:
 if __name__ == '__main__':
     try:
         game = PlaneWar()
-        game.train()
+        # game.start()  # 键盘控制
+        game.train()  # Q-learning训练
+        # 这个类
     except SystemExit:
         pass
     except:
