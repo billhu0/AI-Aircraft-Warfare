@@ -1,6 +1,7 @@
 import util
 import pandas
 import math
+from typing import * 
 
 
 """ 找最近的敌机 """
@@ -52,8 +53,7 @@ def calculate_get_gameprops(pos1, pos2, move):
         return 10
 
 
-def manhattanDistance(pos1, pos2):
-
+def manhattanDistance(pos1: Tuple[int, int], pos2: Tuple[int, int]) -> int:
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 
@@ -66,8 +66,10 @@ def getFeatures(state, action):
 
     feature = util.Counter()
     gama = 0.7
+    
+    # TODO: 这一块暂时还无法运行, 需要改一改
     # feature1：计算我放飞机到最近的三个敌机之间的距离分数
-    if action != "Bomb":
+    if action != "bomb":
         position = state.mePos
         bombs_pos = state.bombs
         double_bullet_pos = state.double_bullet

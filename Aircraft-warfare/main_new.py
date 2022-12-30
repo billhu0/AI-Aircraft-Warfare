@@ -216,7 +216,7 @@ class PlaneWar:
             self.init_game()
 
             # TODO: state信息
-            newState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
+            gameState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
             
             counter = 0
             action: str = 'stay'
@@ -229,7 +229,18 @@ class PlaneWar:
                 if counter % 5 == 0:
                     # TODO: 这里需要更新state信息, 并选择出action. 此处随机选择一个action仅为示例用途
                     action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
-                    currentState = newState
+                    gameState.assignData(
+                        mePos=(self.me.rect.left, self.me.rect.top),
+                        score=self.score, 
+                        enemy_num=len(self.enemies), 
+                        enemyPos=[(enemy.rect.left, enemy.rect.top) for enemy in self.enemies],
+                        bullet_supply_pos=(self.bullet_supply.rect.left, self.bullet_supply.rect.top),
+                        bomb_supply_pos=(self.bomb_supply.rect.left, self.bomb_supply.rect.top),
+                        life_num=self.life_num, 
+                        bomb_num=self.bomb_num,
+                        is_double_bullet=self.is_double_bullet,
+                    )
+                    # action = QL.getAction(gameState)
                     self.print_info()
                 
                 self._handle_events()
