@@ -24,7 +24,17 @@ def print_green(s: str, end: str or None = '\n') -> None:
 def print_red(s: str, end: str or None = '\n') -> None:
     print("\033[37;41m{}\033[0m ".format(s), end=end)
 
-
+"""
+这是重构过的游戏的类 class PlaneWar, 其中:
+    start() 方法是手动键盘控制游戏
+    train() 方法是q-learning训练
+    这两个方法里就是游戏的主要逻辑, 主要包含一个init操作和一个while True循环
+        init_game() 中包含了一些 self.什么什么的成员变量，可以从这些变量获取游戏状态信息
+        那个while循环就是游戏的主循环, 我们主要需要关注这个循环, 每一次循环都要更新state并进行相关操作
+    move_me() 是手动键盘控制飞机的移动, 在手动控制游戏时会用到
+    move_action() 是根据action移动飞机, 在q-learning训练时会用到
+    其余的私有方法(用_开头的函数)是游戏框架原有的代码，可以不看
+"""
 class PlaneWar:
 
     def __init__(self) -> None:
@@ -205,10 +215,11 @@ class PlaneWar:
             # Initialize game
             self.init_game()
 
+            # TODO: state信息
             newState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
             
             counter = 0
-            action = 'stay'
+            action: str = 'stay'
             currentState = None
             
             while True:
@@ -216,6 +227,7 @@ class PlaneWar:
                 # 每一帧都计算state相关信息可能会导致数据量太大，所以每隔几帧才计算以下
                 counter += 1
                 if counter % 5 == 0:
+                    # TODO: 这里需要更新state信息, 并选择出action. 此处随机选择一个action仅为示例用途
                     action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
                     currentState = newState
                     self.print_info()
@@ -610,8 +622,6 @@ class PlaneWar:
 
         self.gameover_rect.left, self.gameover_rect.top = (self.width - self.again_rect.width) // 2, self.again_rect.bottom + 10
         self.screen.blit(self.gameover_image, self.gameover_rect)
-
-
 
     def _add_small_enemies(self, num: int) -> None:
         """Add a given number of small-enemies to the game. 添加指定数量的小型敌机"""
