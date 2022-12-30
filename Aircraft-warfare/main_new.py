@@ -48,6 +48,7 @@ class PlaneWar:
             'me_down': pygame.mixer.Sound('sound/me_down.wav'),
         }
         [sound.set_volume(0.2) for sound in self.sounds.values()]
+
         pygame.mixer.music.load('sound/game_music.ogg')
         pygame.mixer.music.set_volume(0.2)
 
@@ -94,25 +95,12 @@ class PlaneWar:
         self.e3_destroy_index = 0
         self.me_destroy_index = 0
 
-    def main(self):
-        self.init_planes()
-
-        # Score
-        self.score: int = 0
-
-        # Pause flag 
-        self.paused: bool = False
-
+        # Miscellaneous
         self.paused_rect = self.pause_nor_image.get_rect()
         self.paused_rect.left, self.paused_rect.top = self.width - self.paused_rect.width - 10, 10
         self.paused_image = self.pause_nor_image
 
-        # difficulty level
-        self.level = 1
-
-        # 全屏炸弹
         self.bomb_rect = self.bomb_image.get_rect()
-        self.bomb_num = 3
 
         # 每30秒发放一个补给包
         self.bullet_supply = supply.Bullet_Supply((self.width, self.height))
@@ -122,14 +110,12 @@ class PlaneWar:
 
         # 超级子弹定时器
         self.DOUBLE_BULLET_TIME = pygame.USEREVENT + 1
-        self.is_double_bullet = False
 
         # 解除我方无敌状态定时器
         self.INVINCIBLE_TIME = pygame.USEREVENT + 2
 
         # 生命数量
         self.life_rect = self.life_image.get_rect()
-        self.life_num = 3
 
         # 用于阻止重复打开记录文件
         self.recorded = False
@@ -143,12 +129,21 @@ class PlaneWar:
 
         self.delay = 100
 
+    def main(self):
+        # 初始化一些东西
+        self.init_planes()
+
+        # Initialize game status 初始化游戏状态信息
+        self.score: int = 0  # 分数
+        self.life_num: int = 3  # 剩余命的数量
+        self.paused: bool = False  # 是否处于暂停状态
+        self.level: int = 1  # 难度等级
+        self.bomb_num: int = 3  # 炸弹(可清空全屏飞机)数量
+        self.is_double_bullet: bool = False  # 是否处于超级子弹模式(一次发左右2颗子弹)
         self.clock = pygame.time.Clock()
-
         pygame.mixer.music.play(-1)
-        self.main_loop()
 
-    def main_loop(self):
+        # Main loop
         while True:
             self._handle_events()
             self._add_difficulty()
@@ -156,8 +151,7 @@ class PlaneWar:
 
             if not self.paused and self.life_num:
                 self.move_me()
-                self.draw()
-
+                self.draw_frame()
             elif self.life_num == 0:
                 self.draw_game_over()
 
@@ -175,6 +169,11 @@ class PlaneWar:
             self.clock.tick(60)
 
     def _handle_events(self) -> None:
+        """
+        Handle interaction events.
+        Checks whether game quit button (ESC) is pressed, game pause button is clicked,
+        and checks if user has used a bomb.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -261,7 +260,9 @@ class PlaneWar:
         if key_pressed[pygame.K_d] or key_pressed[pygame.K_RIGHT]:
             self.me.moveRight()
 
-    def draw(self):
+    def draw_frame(self):
+        """Calculate a frame (including positions and collisions) and render it. 计算物体位置(含碰撞检测)并渲染一帧"""
+
         global bullets
 
         # 绘制全屏炸弹补给并检测是否获得
@@ -304,9 +305,9 @@ class PlaneWar:
                 b.move()
                 self.screen.blit(b.image, b.rect)
                 enemy_hit = pygame.sprite.spritecollide(b, self.enemies, False, pygame.sprite.collide_mask)
-                if enemy_hit:
+                if enemy_hit:  # 如果子弹打到了一架敌机
                     b.active = False
-                    for e in enemy_hit:
+                    for e in enemy_hit:  # 如果打到了中型或大型敌机，则该敌机血量减1
                         if e in self.mid_enemies or e in self.big_enemies:
                             e.energy -= 1
                             if e.energy == 0:
@@ -327,19 +328,16 @@ class PlaneWar:
                     else:
                         self.screen.blit(each.image2, each.rect)
                 # 绘制血槽
-                pygame.draw.line(self.screen, (0, 0, 0), \
-                                 (each.rect.left, each.rect.top - 5), \
-                                 (each.rect.right, each.rect.top - 5), \
-                                 2)
+                pygame.draw.line(self.screen, (0, 0, 0),
+                                 (each.rect.left, each.rect.top - 5), (each.rect.right, each.rect.top - 5), 2)
                 energy_remain = each.energy / enemy.BigEnemy.energy
                 if energy_remain > 0.2:
                     energy_color = (0, 255, 0)
                 else:
                     energy_color = (255, 0, 0)
-                pygame.draw.line(self.screen, energy_color, \
-                                 (each.rect.left, each.rect.top - 5), \
-                                 (each.rect.left + each.rect.width * energy_remain, each.rect.top - 5), \
-                                 2)
+                pygame.draw.line(self.screen, energy_color,
+                                 (each.rect.left, each.rect.top - 5),
+                                 (each.rect.left + each.rect.width * energy_remain, each.rect.top - 5), 2)
 
                 # 即将出现在画面中，播放音效
                 if each.rect.bottom == -50:
@@ -369,20 +367,17 @@ class PlaneWar:
                     self.screen.blit(each.image, each.rect)
 
                 # 绘制血槽
-                pygame.draw.line(self.screen, (0, 0, 0), \
-                                 (each.rect.left, each.rect.top - 5), \
-                                 (each.rect.right, each.rect.top - 5), \
-                                 2)
+                pygame.draw.line(self.screen, (0, 0, 0),
+                                 (each.rect.left, each.rect.top - 5), (each.rect.right, each.rect.top - 5), 2)
                 # 当生命大于20%显示绿色，否则显示红色
                 energy_remain = each.energy / enemy.MidEnemy.energy
                 if energy_remain > 0.2:
                     energy_color = (0, 255, 0)
                 else:
                     energy_color = (255, 0, 0)
-                pygame.draw.line(self.screen, energy_color, \
-                                 (each.rect.left, each.rect.top - 5), \
-                                 (each.rect.left + each.rect.width * energy_remain, \
-                                  each.rect.top - 5), 2)
+                pygame.draw.line(self.screen, energy_color,
+                                 (each.rect.left, each.rect.top - 5),
+                                 (each.rect.left + each.rect.width * energy_remain, each.rect.top - 5), 2)
             else:
                 # 毁灭
                 if not (self.delay % 3):
@@ -443,8 +438,8 @@ class PlaneWar:
         # 绘制剩余生命数量
         if self.life_num:
             for i in range(self.life_num):
-                self.screen.blit(self.life_image, \
-                                 (self.width - 10 - (i + 1) * self.life_rect.width, \
+                self.screen.blit(self.life_image,
+                                 (self.width - 10 - (i + 1) * self.life_rect.width,
                                   self.height - 10 - self.life_rect.height))
 
         # 绘制得分
@@ -473,24 +468,23 @@ class PlaneWar:
         record_score_text = self.score_font.render('Best : %d' % record_score, True, (255, 255, 255))
         self.screen.blit(record_score_text, (50, 50))
 
-        gameover_text1 = self.gameover_font.render('Your Score', True, (255, 255, 255))
-        gameover_text1_rect = gameover_text1.get_rect()
-        gameover_text1_rect.left, gameover_text1_rect.top = \
-            (self.width - gameover_text1_rect.width) // 2, self.height // 3
-        self.screen.blit(gameover_text1, gameover_text1_rect)
+        # Render "Your score" with white color
+        score_txt1 = self.gameover_font.render('Your Score', True, (255, 255, 255))
+        score_rect1 = score_txt1.get_rect()
+        score_rect1.left, score_rect1.top = (self.width - score_rect1.width) // 2, self.height // 3
+        self.screen.blit(score_txt1, score_rect1)
 
-        gameover_text2 = self.gameover_font.render(str(self.score), True, (255, 255, 255))
-        gameover_text2_rect = gameover_text2.get_rect()
-        gameover_text2_rect.left, gameover_text2_rect.top = \
-            (self.width - gameover_text2_rect.width) // 2, gameover_text1_rect.bottom + 10
-        self.screen.blit(gameover_text2, gameover_text2_rect)
+        # Render score (a number) with white color
+        score_txt2 = self.gameover_font.render(str(self.score), True, (255, 255, 255))
+        score_rect2 = score_txt2.get_rect()
+        score_rect2.left, score_rect2.top = (self.width - score_rect2.width) // 2, score_rect1.bottom + 10
+        self.screen.blit(score_txt2, score_rect2)
 
-        self.again_rect.left, self.again_rect.top = \
-            (self.width - self.again_rect.width) // 2, gameover_text2_rect.bottom + 50
+        self.again_rect.left, self.again_rect.top = (self.width - self.again_rect.width) // 2, score_rect2.bottom + 50
         self.screen.blit(self.again_image, self.again_rect)
 
-        self.gameover_rect.left, self.gameover_rect.top = \
-            (self.width - self.again_rect.width) // 2, self.again_rect.bottom + 10
+        self.gameover_rect.left, self.gameover_rect.top = (
+                                                                      self.width - self.again_rect.width) // 2, self.again_rect.bottom + 10
         self.screen.blit(self.gameover_image, self.gameover_rect)
 
         # 检测用户的鼠标操作
@@ -509,7 +503,6 @@ class PlaneWar:
                 # 退出游戏
                 pygame.quit()
                 sys.exit()
-
                 # 绘制暂停按钮
 
     def _add_small_enemies(self, num: int) -> None:
