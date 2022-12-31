@@ -534,7 +534,7 @@ def main():
                 if bomb_supply.active:
                     if bomb_supply.rect.top > 0:
                         bomb_supply_pos = (bomb_supply.rect.left, bomb_supply.rect.top)
-
+                #TODO: 暂时不更新，明日验证weight
                 # newState.assignData(score=score, 
                 #                     mePos=(me.rect.left, me.rect.top),
                 #                     enemy_num=len(enemyPos), 
@@ -612,7 +612,8 @@ def main():
                 #         sys.exit()
 
                 # pygame.quit()
-                # sys.exit()     
+                # sys.exit()
+                #TODO: 暂时不更新，明日验证weight     
                 # QL.update(currentState, action, newState, -10) #暂时这么写
                 break
                 # return

@@ -56,7 +56,8 @@ class weight(dict):
         """
         这里weight应该是feature的参数
         """
-        pass
+        dict.__init__(self,{'Left':1, 'Right':1, 'Up':1, 'Down':1, 'Bomb':1})
+        
     def normalize(self):
         sumOfValues = sum([v for v in self.values()])
         for i in self.keys():
