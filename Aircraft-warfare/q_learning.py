@@ -88,7 +88,7 @@ class approximateQlearning(QLearning):
             self.computeValueFromQValues(nextState) - self.getQValue(state, action)
         for feature in self.features:
             self.weights[feature] += self.alpha * difference * self.features[feature]
-        self.weights.nomalize()
+        self.weights.normalize()
         # print(self.weights)
 
     def computeValueFromQValues(self, state):
