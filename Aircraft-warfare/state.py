@@ -1,7 +1,4 @@
 import numpy
-"""
-这一部分仿照佘以宁他们写的,具体实现可以后续讨论
-"""
 class state:
     def __init__(self, mePos, score=0, enemy_num=0, enemyPos = [], bullet_supply_pos = None, bomb_supply_pos = None, life_num=3, is_double_bullet=False, bomb_num=3):
         """
@@ -56,7 +53,11 @@ class weight(dict):
         """
         这里weight应该是feature的参数
         """
-        dict.__init__(self,{'distance_score':1,'get_bombs':1,"get_double_bullet" :1,"bomb" :1})
+        with open('parameter.txt', 'r') as f:
+            weight = f.read()
+            weight = weight.split(',')
+            weight = [float(i) for i in weight]
+        dict.__init__(self,{'distance_score':weight[0],'get_bombs':weight[1],"get_double_bullet" :weight[2],"bomb" :weight[3]})
         
     def normalize(self):
         sumOfValues = sum([v for v in self.values()])

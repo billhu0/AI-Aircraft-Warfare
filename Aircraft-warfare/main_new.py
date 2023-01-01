@@ -226,9 +226,12 @@ class PlaneWar:
                 
                 # 每一帧都计算state相关信息可能会导致数据量太大，所以每隔几帧才计算以下
                 counter += 1
+                currentState = gameState
+                currentScore = self.score
                 if counter % 5 == 0:
                     # TODO: 这里需要更新state信息, 并选择出action. 此处随机选择一个action仅为示例用途
-                    action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
+                    #action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
+                    
                     gameState.assignData(
                         mePos=(self.me.rect.left, self.me.rect.top),
                         score=self.score, 
@@ -240,18 +243,22 @@ class PlaneWar:
                         bomb_num=self.bomb_num,
                         is_double_bullet=self.is_double_bullet,
                     )
-                    # action = QL.getAction(gameState)
+                    action = QL.getAction(gameState)
                     self.print_info()
                 
                 self._handle_events()
                 self._add_difficulty()
 
                 if not self.paused and self.life_num:
+                    
                     self.move_action(action)
+                    QL.update(currentState, action, gameState,  self.score - currentScore) # reward
                     self._draw_frame()
                 elif self.life_num == 0:
                     # 结束游戏之后开始下一局训练
                     self._draw_game_over()
+                    QL.update(currentState, action, gameState, -10000)
+                    QL.StoreWeights()
                     pygame.display.flip()
                     print('Game ended. Wait 3s.')
                     time.sleep(3)

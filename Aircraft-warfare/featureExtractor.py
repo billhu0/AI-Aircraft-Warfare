@@ -13,15 +13,15 @@ def find_the_nearest_plane(state, action):
 
 
 def plane_move(pos1, move):
-    if move == "Up":
+    if move == "up":
         return (pos1[0], pos1[1]-1)
-    elif move == "Down":
+    elif move == "down":
         return (pos1[0], pos1[1]+1)
-    elif move == "Left":
+    elif move == "left":
         return (pos1[0]-1, pos1[1])
-    elif move == "Right":
+    elif move == "right":
         return (pos1[0]+1, pos1[1])
-    elif move == "Bomb":
+    elif move == "bomb":
         return pos1
     else:
         return pos1
@@ -37,7 +37,7 @@ def calculate_distance_score(pos1, pos2, move):
         else:
             return 100
     else:
-        if move != "Left" and move != "Right":
+        if move != "left" and move != "right":
             return 10
         else:
             if manhattanDistance(plane_move(pos1, move), pos2) < manhattanDistance(pos1, pos2):
@@ -88,11 +88,11 @@ def getFeatures(state, action):
         feature["get_double_bullet"] = calculate_get_gameprops(
             position, double_bullet_pos, action)
     else:
-        if state.num_bombs > 0:
-            if state.enemy_num > 6:
-                feature["bomb"] = 50*state.enemy_num
+        if state.bomb_num > 0:
+            if state.bomb_num > 6:
+                feature["bomb"] = 5*state.enemy_num
             else:
-                feature["bomb"] = 100*state.enemy_num
+                feature["bomb"] = 10*state.enemy_num
 
         else:
             feature["bomb"] = 0

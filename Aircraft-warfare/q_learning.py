@@ -5,14 +5,11 @@ import util
 import state
 import featureExtractor
 import math
-"""
-这部分仿照佘以宁他们的
-"""
 
 
 class QLearning:
-    def __init__(self, learningRate=0.01, discount=0.9, explorationRate=0.9, numTraining=100):
-        self.actions = ["Right", "Left", "Up", "Down", "Bomb"]
+    def __init__(self, learningRate=0.01, discount=0.9, explorationRate=0.3, numTraining=100): #调整了一下epsilon
+        self.actions = ["right", "left", "up", "down", "bomb"]
         self.alpha = learningRate
         self.gamma = discount
         self.epsilon = explorationRate
@@ -96,3 +93,11 @@ class approximateQlearning(QLearning):
         for action in self.actions:
             maxValue = max(maxValue, self.getQValue(state, action))
         return maxValue
+    def StoreWeights(self):
+        with open('parameter.txt', 'w') as f:
+            for key in self.weights.keys():
+                if key == self.weights.keys()[-1]:
+                    f.write("%f" % (self.weights[key]))
+                else: 
+                    f.write("%f," % (self.weights[key]))
+
