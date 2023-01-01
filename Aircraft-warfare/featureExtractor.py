@@ -71,13 +71,14 @@ def getFeatures(state, action):
     # feature1：计算我放飞机到最近的三个敌机之间的距离分数
     if action != "bomb":
         position = state.mePos
-        bombs_pos = state.bombs
-        double_bullet_pos = state.double_bullet
+        bombs_pos = state.bomb_supply_pos
+        double_bullet_pos = state.bullet_supply_pos
         enemyPosList = state.enemyPos.copy()
-        enemyPosList.sort(key=lambda x: manhattanDistance(state.mePos, x))
-        enemyPos_1 = enemyPosList[0]
+        if len(enemyPosList) > 0:
+            enemyPosList.sort(key=lambda x: manhattanDistance(state.mePos, x))
+        enemyPos_1 = enemyPosList[0] if len(enemyPosList) > 0 else None
         enemyPos_2 = enemyPosList[1] if len(enemyPosList) > 1 else None
-        enemyPos_3 = enemyPosList[2] if len(enemyPosList) > 2 else None
+        enemyPos_3 = enemyPosList[2] if len(enemyPosList) > 2 else None # 这里的enemyPos_1, enemyPos_2, enemyPos_3是我方飞机到最近的三个敌机的距离
         feature["distance_score"] = calculate_distance_score(position, enemyPos_1, action) + gama*calculate_distance_score(
             position, enemyPos_2, action) + gama*gama*calculate_distance_score(position, enemyPos_3, action)
         feature["get_bombs"] = calculate_get_gameprops(
