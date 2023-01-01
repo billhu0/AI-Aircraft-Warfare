@@ -8,7 +8,7 @@ import math
 
 
 class QLearning:
-    def __init__(self, learningRate=0.01, discount=0.9, explorationRate=0.3, numTraining=100): #调整了一下epsilon
+    def __init__(self, learningRate=0.01, discount=0.9, explorationRate=0.9, numTraining=100): #调整了一下epsilon
         self.actions = ["right", "left", "up", "down", "bomb"]
         self.alpha = learningRate
         self.gamma = discount
@@ -96,6 +96,7 @@ class approximateQlearning(QLearning):
     def StoreWeights(self):
         with open('parameter.txt', 'w') as f:
             for key in self.weights.keys():
+                print(key)
                 if key == self.weights.keys()[-1]:
                     f.write("%f" % (self.weights[key]))
                 else: 

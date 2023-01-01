@@ -227,7 +227,7 @@ def main():
                 #             for each in enemies:
                 #                 if each.rect.bottom > 0:
                 #                     each.active = False
-                elif action == "Bomb":
+                elif action == "bomb":
                     if bomb_num:
                         bomb_num -= 1
                         bomb_sound.play()
@@ -313,13 +313,13 @@ def main():
                 #     me.moveLeft()
                 # if key_pressed[pygame.locals.K_d] or key_pressed[pygame.locals.K_RIGHT]:
                 #     me.moveRight()
-                if action == "Right":
+                if action == "right":
                     me.moveRight()
-                if action == "Left":
+                if action == "left":
                     me.moveLeft()
-                if action == "Up":
+                if action == "up":
                     me.moveUp()
-                if action == "Down":
+                if action == "down":
                     me.moveDown()
                 
                 # 绘制全屏炸弹补给并检测是否获得
