@@ -60,6 +60,7 @@ class weight(dict):
         dict.__init__(self,{'distance_score':weight[0],'get_bombs':weight[1],"get_double_bullet" :weight[2],"bomb" :weight[3]})
         
     def normalize(self):
-        sumOfValues = sum([v for v in self.values()])
+        import math
+        sumOfValues = sum([math.exp(v) for v in self.values()])
         for i in self.keys():
-            self[i] /= sumOfValues
+            self[i] =  math.exp(self[i])/sumOfValues

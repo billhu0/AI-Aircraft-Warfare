@@ -228,7 +228,7 @@ class PlaneWar:
                 counter += 1
                 currentState = gameState
                 currentScore = self.score
-                if counter % 5 == 0:
+                if counter % 1 == 0:
                     # TODO: 这里需要更新state信息, 并选择出action. 此处随机选择一个action仅为示例用途
                     #action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
                     
