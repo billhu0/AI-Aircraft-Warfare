@@ -184,8 +184,10 @@ def main():
         
         running = True
         newState = state.state(mePos=(me.rect.left, me.rect.top))
+
         while running:
             #action = random.choice(["Right","Left","Down","Up","Bomb"]) # weight 定义没写
+            
             current_score = score
             currentState = newState
             action = QL.getAction(currentState)
@@ -516,15 +518,15 @@ def main():
                 for enemy_1 in small_enemies.sprites():
                     if enemy_1.rect.top > 0:
                         # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
-                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                        enemyPos.append(((enemy_1.rect.left+enemy_1.rect.right)/2, (enemy_1.rect.top+enemy_1.rect.bottom)/2))
                 for enemy_1 in mid_enemies.sprites():
                     if enemy_1.rect.top > 0:
                         # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
-                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                        enemyPos.append(((enemy_1.rect.left+enemy_1.rect.right)/2, (enemy_1.rect.top+enemy_1.rect.bottom)/2))
                 for enemy_1 in big_enemies.sprites():
                     if enemy_1.rect.top > 0:
                         # print("\033[37;41m enemy left={}, top={}; \033[0m ".format(enemy_1.rect.left, enemy_1.rect.top), end='')
-                        enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                        enemyPos.append(((enemy_1.rect.left+enemy_1.rect.right)/2, (enemy_1.rect.top+enemy_1.rect.bottom)/2))
                 
                 bullet_supply_pos = None
                 if bullet_supply.active:
@@ -537,7 +539,7 @@ def main():
                         bomb_supply_pos = (bomb_supply.rect.left, bomb_supply.rect.top)
                 #TODO: 暂时不更新，明日验证weight
                 newState.assignData(score=score, 
-                                    mePos=(me.rect.left, me.rect.top),
+                                    mePos=((me.rect.left+me.rect.right)/2, (me.rect.top+me.rect.bottom)/2),
                                     enemy_num=len(enemyPos), 
                                     enemyPos=enemyPos, 
                                     life_num=life_num, 
