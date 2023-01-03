@@ -115,6 +115,7 @@ def getFeatures(state, action):
                 feature["bomb"] = 6000
         else:
             feature["bomb"] = 100
+        feature["bomb"]=50
         feature["distance_score"] = 50
         feature["get_bombs"] = 50
         feature["get_double_bullet"] = 50
