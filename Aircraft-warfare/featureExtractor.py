@@ -33,24 +33,26 @@ def calculate_distance_score(pos1, pos2, move):
         return 0
     if manhattanDistance(pos1, pos2) < 20:
         if manhattanDistance(plane_move(pos1, move), pos2) > manhattanDistance(pos1, pos2):
-            return 10
+            return 1000
         else:
             return 100
     else:
         if move != "left" and move != "right":
-            return 10
+            return 100
         else:
             if manhattanDistance(plane_move(pos1, move), pos2) < manhattanDistance(pos1, pos2):
-                return 100
+                return 1000
             else:
-                return 10
+                return 100
 
 
 def calculate_get_gameprops(pos1, pos2, move):
+    if pos2 == None:
+        return 0
     if manhattanDistance(plane_move(pos1, move), pos2) < manhattanDistance(pos1, pos2):
-        return 200
+        return 1000
     else:
-        return 10
+        return 100
 
 
 def manhattanDistance(pos1: Tuple[int, int], pos2: Tuple[int, int]) -> int:
@@ -67,7 +69,7 @@ def getFeatures(state, action):
     """
 
     feature = util.Counter()
-    gama = 0.7
+    gama = 0.5
     
     # TODO: 这一块暂时还无法运行, 需要改一改
     # feature1：计算我放飞机到最近的三个敌机之间的距离分数
@@ -80,20 +82,25 @@ def getFeatures(state, action):
             enemyPosList.sort(key=lambda x: manhattanDistance(state.mePos, x))
         enemyPos_1 = enemyPosList[0] if len(enemyPosList) > 0 else None
         enemyPos_2 = enemyPosList[1] if len(enemyPosList) > 1 else None
-        enemyPos_3 = enemyPosList[2] if len(enemyPosList) > 2 else None # 这里的enemyPos_1, enemyPos_2, enemyPos_3是我方飞机到最近的三个敌机的距离
+        # enemyPos_3 = enemyPosList[2] if len(enemyPosList) > 2 else None # 这里的enemyPos_1, enemyPos_2, enemyPos_3是我方飞机到最近的三个敌机的距离
         feature["distance_score"] = calculate_distance_score(position, enemyPos_1, action) + gama*calculate_distance_score(
-            position, enemyPos_2, action) + gama*gama*calculate_distance_score(position, enemyPos_3, action)
+            position, enemyPos_2, action) 
+            #+ gama*gama*calculate_distance_score(position, enemyPos_3, action)
         feature["get_bombs"] = calculate_get_gameprops(
             position, bombs_pos, action)
         feature["get_double_bullet"] = calculate_get_gameprops(
             position, double_bullet_pos, action)
+        feature["bomb"] =300
     else:
         if state.bomb_num > 0:
-            if state.bomb_num > 6:
-                feature["bomb"] = 5*state.enemy_num
+            if state.bomb_num > 5:
+                feature["bomb"] = 400*state.enemy_num
             else:
-                feature["bomb"] = 10*state.enemy_num
+                feature["bomb"] = 200*state.enemy_num
 
         else:
-            feature["bomb"] = 0
+            feature["bomb"] = 100
+        feature["distance_score"] = 50
+        feature["get_bombs"] = 50
+        feature["get_double_bullet"] = 50
     return feature

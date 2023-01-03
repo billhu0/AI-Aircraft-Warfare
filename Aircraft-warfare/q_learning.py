@@ -8,7 +8,7 @@ import math
 
 
 class QLearning:
-    def __init__(self, learningRate=0.01, discount=0.9, explorationRate=0.9, numTraining=100): #调整了一下epsilon
+    def __init__(self, learningRate=0.000001, discount=0.9, explorationRate=0.05, numTraining=100): #调整了一下epsilon
         self.actions = ["right", "left", "up", "down", "bomb"]
         self.alpha = learningRate
         self.gamma = discount
@@ -83,9 +83,17 @@ class approximateQlearning(QLearning):
     def update(self, state, action, nextState, reward):
         difference = reward + self.gamma * \
             self.computeValueFromQValues(nextState) - self.getQValue(state, action)
+        print(reward)
+        print(reward + self.gamma * \
+            self.computeValueFromQValues(nextState))
+        print(self.getQValue(state, action))
+        print(difference)
+        print(self.weights)
         for feature in self.features:
             self.weights[feature] += self.alpha * difference * self.features[feature]
         self.weights.normalize()
+        print(self.weights)
+        #self.StoreWeights()
         # print(self.weights)
 
     def computeValueFromQValues(self, state):
@@ -97,7 +105,7 @@ class approximateQlearning(QLearning):
         with open('parameter.txt', 'w') as f:
             for key in self.weights.keys():
                 print(key)
-                if key == self.weights.keys()[-1]:
+                if key == list(self.weights.keys())[-1]:
                     f.write("%f" % (self.weights[key]))
                 else: 
                     f.write("%f," % (self.weights[key]))
