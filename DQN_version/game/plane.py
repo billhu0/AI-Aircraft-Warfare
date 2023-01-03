@@ -121,13 +121,24 @@ class GameState:
         # 首先判断玩家飞机没有被击中
         # 循环15次发射一个子弹
         # 检测输入正确性
-        if input_actions[0] == 1 or input_actions[1]== 1 or input_actions[2]== 1:  # 检查输入正常
-            if input_actions[0] == 0 and input_actions[1] == 1 and input_actions[2] == 0:
-                self.player.moveLeft()
-            elif input_actions[0] == 0 and input_actions[1] == 0 and input_actions[2] == 1:
-                self.player.moveRight()
-            else:
-                pass
+        #print(input_actions)
+        # if input_actions[0] == 1 or input_actions[1]== 1 or input_actions[2]== 1:  # 检查输入正常
+        #     if input_actions[0] == 0 and input_actions[1] == 1 and input_actions[2] == 0:
+        #         self.player.moveLeft()
+        #     elif input_actions[0] == 0 and input_actions[1] == 0 and input_actions[2] == 1:
+        #         self.player.moveRight()
+        #     else:
+        #         pass
+        if input_actions[0][0] == 0:
+            pass
+        elif input_actions[0][0] == 1:
+            self.player.moveLeft()
+        elif input_actions[0][0] == 2:
+            self.player.moveRight()
+        elif input_actions[0][0] == 3:
+            self.player.moveUp()
+        elif input_actions[0][0] == 4:
+            self.player.moveDown()
         else:
             raise ValueError('Multiple input actions!')
 
@@ -178,7 +189,7 @@ class GameState:
 
         # 绘制背景
         self.screen.fill(0)
-        # screen.blit(background, (0, 0))
+        #self.screen.blit(background, (0, 0))
 
         # 绘制玩家飞机
         if not self.player.is_hit:
@@ -190,7 +201,7 @@ class GameState:
         # 敌机被子弹击中效果显示
         for enemy_down in self.enemies_down:
             self.enemies_down.remove(enemy_down)
-            self.score += 1
+            self.score += 1000
             self.screen.blit(enemy_down.down_imgs, enemy_down.rect) #将爆炸的敌机画出来
             reward = 1
 
@@ -200,16 +211,17 @@ class GameState:
         self.enemies1.draw(self.screen)
 
         # 绘制得分
-        score_font = pygame.font.Font(None, 36)
+        score_font = pygame.font.Font("font/font.ttf", 36)
         # score_text = score_font.render('score: '+str(score), True, (128, 128, 128))
-        score_text = score_font.render(str(self.score), True, (128, 128, 128))
-
-        text_rect = score_text.get_rect()
-        text_rect.topleft = [10, 10]
-        self.screen.blit(score_text, text_rect)
+        #score_text = score_font.render(str(self.score), True, WHITE )
+        score_text = score_font.render("Score : %s" % str(self.score), True, (0, 0, 0))
+        self.screen.blit(score_text, (10, 5))
+        # text_rect = score_text.get_rect()
+        # text_rect.topleft = [10, 10]
+        # self.screen.blit(score_text, text_rect)
 
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         pygame.display.update()
         clock = pygame.time.Clock()
         clock.tick(30)
-        return image_data, reward, terminal
+        return image_data, reward, terminal,self.score
