@@ -80,7 +80,7 @@ class approximateQlearning(QLearning):
             action = self.computeActionFromQValues(state)
         return action
 
-def update(self, state,1!!!!!!!!!!!!!!!!!!!!!!! action, nextState, reward):
+def update(self, state, action, nextState, reward):
         difference = reward + self.gamma * \
             self.computeValueFromQValues(nextState) - self.getQValue(state, action)
         print(reward)
@@ -93,7 +93,7 @@ def update(self, state,1!!!!!!!!!!!!!!!!!!!!!!! action, nextState, reward):
             self.weights[feature] += self.alpha * difference * self.features[feature]
         self.weights.normalize()
         print(self.weights)
-        #self.StoreWeights()
+        self.StoreWeights()
         # print(self.weights)
 
     def computeValueFromQValues(self, state):
