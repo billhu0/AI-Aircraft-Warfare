@@ -252,13 +252,13 @@ class PlaneWar:
                 if not self.paused and self.life_num:
                     
                     self.move_action(action)
-                    QL.update(currentState, action, gameState,  self.score - currentScore) # reward
+                    #QL.update(currentState, action, gameState,  self.score - currentScore) # reward
                     self._draw_frame()
                 elif self.life_num == 0:
                     # 结束游戏之后开始下一局训练
                     self._draw_game_over()
-                    QL.update(currentState, action, gameState, -10000)
-                    QL.StoreWeights()
+                    #QL.update(currentState, action, gameState, -10000)
+                    # QL.StoreWeights()
                     pygame.display.flip()
                     print('Game ended. Wait 3s.')
                     time.sleep(3)

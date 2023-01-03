@@ -93,7 +93,7 @@ class approximateQlearning(QLearning):
             self.weights[feature] += self.alpha * difference * self.features[feature]
         self.weights.normalize()
         print(self.weights)
-        #self.StoreWeights()
+        self.StoreWeights()
         # print(self.weights)
 
     def computeValueFromQValues(self, state):
