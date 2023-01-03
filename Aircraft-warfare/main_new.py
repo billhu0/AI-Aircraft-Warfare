@@ -256,7 +256,7 @@ class PlaneWar:
                             
                     newState.assignData(
                         score=self.score,
-                        mePos=(self.me.rect.left, self.me.rect.top),
+                        mePos=(self.me.rect.left+13, self.me.rect.top),
                         enemy_num=len(enemyPos),
                         enemyPos=enemyPos,
                         life_num=self.life_num,
