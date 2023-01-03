@@ -215,36 +215,15 @@ class PlaneWar:
             # Initialize game
             self.init_game()
 
-            # TODO: state信息
-            gameState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
-            
-            counter = 0
-            action: str = 'stay'
-            currentState = None
+            newState = state.state(mePos=(self.me.rect.left, self.me.rect.top))
             
             while True:
+                current_score = self.score
+                currentState = newState
+                action = QL.getAction(currentState)
+                #action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
                 
-                # 每一帧都计算state相关信息可能会导致数据量太大，所以每隔几帧才计算以下
-                counter += 1
-                currentState = gameState
-                currentScore = self.score
-                if counter % 1 == 0:
-                    # TODO: 这里需要更新state信息, 并选择出action. 此处随机选择一个action仅为示例用途
-                    #action = random.choice(['left', 'right', 'up', 'down', 'bomb', 'stay'])
-                    
-                    gameState.assignData(
-                        mePos=(self.me.rect.left, self.me.rect.top),
-                        score=self.score, 
-                        enemy_num=len(self.enemies), 
-                        enemyPos=[(enemy.rect.left, enemy.rect.top) for enemy in self.enemies],
-                        bullet_supply_pos=(self.bullet_supply.rect.left, self.bullet_supply.rect.top),
-                        bomb_supply_pos=(self.bomb_supply.rect.left, self.bomb_supply.rect.top),
-                        life_num=self.life_num, 
-                        bomb_num=self.bomb_num,
-                        is_double_bullet=self.is_double_bullet,
-                    )
-                    action = QL.getAction(gameState)
-                    self.print_info()
+                self.print_info()
                 
                 self._handle_events()
                 self._add_difficulty()
@@ -252,13 +231,50 @@ class PlaneWar:
                 if not self.paused and self.life_num:
                     
                     self.move_action(action)
-                    QL.update(currentState, action, gameState,  self.score - currentScore) # reward
+                    
+                    # 画面中的敌机位置
+                    enemyPos = []
+                    for enemy_1 in self.small_enemies.sprites():
+                        if enemy_1.rect.top > 0:
+                            enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                    for enemy_2 in self.mid_enemies.sprites():
+                        if enemy_2.rect.top > 0:
+                            enemyPos.append((enemy_2.rect.left, enemy_2.rect.top))
+                    for enemy_3 in self.big_enemies.sprites():
+                        if enemy_3.rect.top > 0:
+                            enemyPos.append((enemy_3.rect.left, enemy_3.rect.top))
+                    
+                    bullet_supply_pos = None
+                    if self.bullet_supply.active:
+                        if self.bullet_supply.rect.top > 0:
+                            bullet_supply_pos = (self.bullet_supply.rect.left, self.bullet_supply.rect.top)
+                    
+                    bomb_supply_pos = None
+                    if self.bomb_supply.active:
+                        if self.bomb_supply.rect.top > 0:
+                            bomb_supply_pos = (self.bomb_supply.rect.left, self.bomb_supply.rect.top)
+                            
+                    newState.assignData(
+                        score=self.score,
+                        mePos=(self.me.rect.left, self.me.rect.top),
+                        enemy_num=len(enemyPos),
+                        enemyPos=enemyPos,
+                        life_num=self.life_num,
+                        is_double_bullet=self.bullet_supply.active,
+                        bomb_num=self.bomb_num,
+                        bullet_supply_pos=bullet_supply_pos,
+                        bomb_supply_pos=bomb_supply_pos,
+                    )
+                    
+                    QL.update(currentState, action, newState, self.score - current_score)
+                    
+                    
                     self._draw_frame()
                 elif self.life_num == 0:
                     # 结束游戏之后开始下一局训练
                     self._draw_game_over()
-                    QL.update(currentState, action, gameState, -10000)
-                    QL.StoreWeights()
+                    QL.update(currentState, action, newState, -10000)
+                    # QL.StoreWeights()
                     pygame.display.flip()
                     print('Game ended. Wait 3s.')
                     time.sleep(3)
