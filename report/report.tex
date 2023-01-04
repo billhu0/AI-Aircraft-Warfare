@@ -30,7 +30,7 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
-\usepackage{ctex}
+% \usepackage{ctex}
 \usepackage{graphicx}   
 \usepackage{wrapfig}
 \usepackage{float}
@@ -78,7 +78,33 @@
 
 \section{Introduction}
 
-    \subsection{Motivation}
+
+% @inproceedings{kempka2016vizdoom,
+% title={Vizdoom: A doom-based ai research platform for visual reinforcement learning},
+% author={Kempka, Micha{\l} and Wydmuch, Marek and Runc, Grzegorz and Toczek, Jakub and Ja{\'s}kowski, Wojciech},
+% booktitle={2016 IEEE conference on computational intelligence and games (CIG)},
+% pages={1--8},
+% year={2016},
+% organization={IEEE}
+% }
+
+
+% @article{heess2015learning,
+% title={Learning continuous control policies by stochastic value gradients},
+% author={Heess, Nicolas and Wayne, Gregory and Silver, David and Lillicrap, Timothy and Erez, Tom and Tassa, Yuval},
+% journal={Advances in neural information processing systems},
+% volume={28},
+% year={2015}
+% }
+
+%     @article{mnih2013playing,
+%     title={Playing atari with deep reinforcement learning},
+%     author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Graves, Alex and Antonoglou, Ioannis and Wierstra, Daan and Riedmiller, Martin},
+%     journal={arXiv preprint arXiv:1312.5602},
+%     year={2013}
+%   }   
+
+    % \subsection{Motivation}
 
     % 《经典飞机大战》是腾讯交流软件微信5.0版本在2013年8月推出的软件内置经典小游戏。
     % 该游戏的玩法十分简单，玩家只需要通过键盘上的上下左右键控制飞机移动，通过空格键发射子弹，击毁敌方飞机即可获得分数。
@@ -87,40 +113,46 @@
     % 例如，当玩家的飞机靠近敌方飞机时，敌方飞机会主动向玩家的飞机发起攻击
     % 在这个project中，我们将这个游戏作为我们的仿真环境，通过强化学习的方法来训练飞机，使得飞机能够自主地在游戏中进行战斗。
 
-    \begin{wrapfigure}{H}{7cm}
-        \centering
-        \includegraphics[width=\linewidth]{pictures/game.jpg}
-        \caption{The Aircraft Warfare Game}
-        \label{fig:aircraft_warfare_game}
-    \end{wrapfigure}
-    
-    `Aircraft Warfare' is a classic game introduced in WeChat 5.0 version released in August 2013.
-    The rule of the game is rather simple. In brief, players need to control the plane movement through the up, down, left and right keys on the keyboard, or shoot bullets to destroy the enemy aircraft to obtain points.
-    Players can obtain points by destroying enemy aircrafts, but they may also be attacked by enemies. When the player's blood volume is 0, the game ends.
-    The gameplay of the game is very simple, but the performance of the player in the game is very complex. This is because the aircraft in the game are intelligent, and they will react according to the player's behavior.
-    For example, when the player's plane is close to the enemy plane, the enemy plane will actively launch an attack on the player's plane.
+\begin{wrapfigure}{H}{7cm}
+    \centering
+    \includegraphics[width=\linewidth]{pictures/game.jpg}
+    \caption{The Aircraft Warfare Game}
+    \label{fig:aircraft_warfare_game}
+\end{wrapfigure}
 
-    In this project, we use this game as our simulation environment, and train the aircraft through the reinforcement learning method to make the aircraft autonomous in the game.
+\par Aircraft Warfare is a classic game we all enjoyed very much, which is also perfect for fully practicing what we have learned in class, as shown in Figure \ref{fig:aircraft_warfare_game}. The rule of the game is rather simple. Player (a upward facing aircraft plane)'s \textbf{goal} is to make the score as high as possible. The player can get \textbf{reward} by managing to hit enemies with five \textbf{actions}, namely, up, down, left, right, and using the bomb.  The \textbf{state} includes the life value and positions of player and enemies and so on. Game overs when life value decreases to 0.
 
-    \subsection{Aircraft Warfare game settings}
+\par However, playing the game well is quit tough when it comes to difficult mode. Hence we turn to AI for help. To the best of our knowledge, reinforcement learning has shown to be very successful in mastering control policies in lots of tasks such as object recognition and solving physics-based control problems\cite{}. Specially, Deep Q-Networks (DQN) are proved to be effective in playing games and even could defeat top human Go players\cite{}. The reason they can work well is that games can quickly generate large amounts of naturally self-annotated (state-action-reward) data, which are high-quality training material for reinforcement learning. That is, this property of games allows deep reinforcement learning to obtain a large number of samples for training to enhance the effect almost costlessly. For example, DeepMind's achievements such as playing Atari with DQN, AlphaGo defeating Go masters, AlphaZero becoming a self-taught master of Go and Chess. And OpenAI's main research is based on games, such as the progress made in Dota. For these reasons, we believe that training agents based on deep reinforcement learning techniques is a promising solution
+
+\par In this paper, we implement an AI-agent for playing the Aircraft Warfare with Q-learning method and Deep Q-learning method. 
+% 未完待续
+    % In brief, players need to control the plane movement through the up, down, left and right keys on the keyboard, or shoot bullets to destroy the enemy aircrafts (downward facing aircrafts) to obtain points. 
+
+    % Players can obtain points by destroying enemy aircrafts, but they may also be attacked by enemies. When the player's blood volume is 0, the game ends.
+    % However, the performance of the player in the game is very complex. Because the aircraft in the game are intelligent, and they will react according to the player's behavior.
+    % For example, when the player's plane is close to the enemy plane, the enemy plane will actively launch an attack on the player's plane.
+
+    % In this project, we use this game as our simulation environment, and train the aircraft through the reinforcement learning method to make the aircraft autonomous in the game.
+
+    % \subsection{Aircraft Warfare game settings} 
 
     % 在这个project中，我们使用了《经典飞机大战》的游戏规则，但是我们对游戏的设置进行了一些修改，以适应我们的强化学习算法。我们采用pygame库来实现游戏的界面，游戏的界面如图\ref{fig:aircraft_warfare_game}所示。
 
-    In this project, we use the original rules of the `Aircraft Warfare' game, but we make some changes to the game settings to adapt to our reinforcement learning algorithm. We use the pygame library to implement the game interface, as shown in Figure \ref{fig:aircraft_warfare_game}. 
+    % In this project, we use the original rules of the `Aircraft Warfare' game, but we make some changes to the game settings to adapt to our reinforcement learning algorithm. We use the pygame library to implement the game interface, as shown in Figure \ref{fig:aircraft_warfare_game}. 
 
-    % 在游戏中，玩家的飞机会持续发射子弹，玩家可以通过键盘上的上下左右键控制飞机移动。玩家通过空格键发射全屏子弹，能够清空屏幕中出现的所有敌机。但全屏子弹的数量具有限制。
+    % % 在游戏中，玩家的飞机会持续发射子弹，玩家可以通过键盘上的上下左右键控制飞机移动。玩家通过空格键发射全屏子弹，能够清空屏幕中出现的所有敌机。但全屏子弹的数量具有限制。
 
-    In the game, the player's plane will continue to fire bullets, and the player can control the plane movement through the up, down, left and right keys on the keyboard. The player can fire a full-screen bullet through the space key, which can clear all the enemy planes that appear on the screen. But the number of full-screen bullets is limited.
+    % In the game, the player's plane will continue to fire bullets, and the player can control the plane movement through the up, down, left and right keys on the keyboard. The player can fire a full-screen bullet through the space key, which can clear all the enemy planes that appear on the screen. But the number of full-screen bullets is limited.
 
-    % 玩家需要打中敌机来获得分数。
+    % % 玩家需要打中敌机来获得分数。
 
-    % 敌机有三种类型，分别是小型敌机、中型敌机和大型敌机。小型飞机没有血量，打中一次即可消灭。中型和大型飞机都有一定的血量，打中一次会减少一定的血量，当血量为0时消灭。同时，游戏中会有血包和double bullet出现，玩家可以通过接触血包来增加生命数量，通过接触double bullet可以在接下来的一段时间内发射攻击范围更大的双倍子弹。
+    % % 敌机有三种类型，分别是小型敌机、中型敌机和大型敌机。小型飞机没有血量，打中一次即可消灭。中型和大型飞机都有一定的血量，打中一次会减少一定的血量，当血量为0时消灭。同时，游戏中会有血包和double bullet出现，玩家可以通过接触血包来增加生命数量，通过接触double bullet可以在接下来的一段时间内发射攻击范围更大的双倍子弹。
 
-    The player needs to hit the enemy plane to get points.
+    % The player needs to hit the enemy plane to get points.
 
-    There are three types of enemy planes, namely small, medium and large enemy planes. Small enemies can be destroyed by a single bullet hitting. Medium and large enemies have a certain blood volume that hitting once will reduce it, and the enemy will be destroyed when the blood volume is 0. 
+    % There are three types of enemy planes, namely small, medium and large enemy planes. Small enemies can be destroyed by a single bullet hitting. Medium and large enemies have a certain blood volume that hitting once will reduce it, and the enemy will be destroyed when the blood volume is 0. 
     
-    At the same time, there will be blood bags and double bullets appearing in the game. The player can increase the number of lives by touching the blood bag, and can fire double bullets with a larger attack range in the next period of time by touching the double bullet.
+    % At the same time, there will be blood bags and double bullets appearing in the game. The player can increase the number of lives by touching the blood bag, and can fire double bullets with a larger attack range in the next period of time by touching the double bullet.
 
 \section{Model Setup}
 
