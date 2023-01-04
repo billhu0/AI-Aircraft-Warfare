@@ -12,6 +12,7 @@ import enemy
 import bullet
 import supply
 
+import numpy as np
 
 bullets = []
 
@@ -281,7 +282,7 @@ class GameState:
         if not self.paused and self.life_num:
             if action[0][0] == 0:
                 pass
-            elif action[0][0] == 3:
+            elif action[0][0] == 5:
                 self.me.moveUp()
             elif action[0][0] == 4:
                 self.me.moveDown()
@@ -289,7 +290,7 @@ class GameState:
                 self.me.moveLeft()
             elif action[0][0] == 2:
                 self.me.moveRight()
-            elif action[0][0] == 5:
+            elif action[0][0] == 3:
                 if self.bomb_num:
                     self.bomb_num -= 1
                     self.sounds['bomb'].play()
@@ -297,30 +298,75 @@ class GameState:
                         if each.rect.bottom > 0:
                             each.active = False
 
+            me_center = np.array(self.me.rect.center)
+            delta_close = np.full(2,fill_value=1e3)
+            delta_second = np.full(2,fill_value=1e3)
+            delta_third = np.full(2,fill_value=1e3)
+            dis_close = 2e5
             enemyPos = []
+            s_cnt = 0
+            m_cnt = 0
+            b_cnt = 0
             for enemy_1 in self.small_enemies.sprites():
                 if enemy_1.rect.top > 0:
+                    enemy_center = np.array(enemy_1.rect.center)
+                    s_cnt += 1
+                    if np.sum(np.abs(enemy_center-me_center)) < dis_close:
+                        delta_third = delta_second
+                        delta_second = delta_close
+                        delta_close = enemy_center-me_center
+                        dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+
             for enemy_2 in self.mid_enemies.sprites():
                 if enemy_2.rect.top > 0:
+                    enemy_center = np.array(enemy_2.rect.center)
+                    m_cnt += 1
+                    if np.sum(np.abs(enemy_center-me_center)) < dis_close:
+                        delta_third = delta_second
+                        delta_second = delta_close
+                        delta_close = enemy_center-me_center
+                        dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_2.rect.left, enemy_2.rect.top))
             for enemy_3 in self.big_enemies.sprites():
                 if enemy_3.rect.top > 0:
+                    enemy_center = np.array(enemy_3.rect.center)
+                    b_cnt += 1
+                    if np.sum(np.abs(enemy_center-me_center)) < dis_close:
+                        delta_third = delta_second
+                        delta_second = delta_close
+                        delta_close = enemy_center-me_center
+                        dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_3.rect.left, enemy_3.rect.top))
-            
+            # print(self.me.rect)
+            # print(me_center)
+            # print(delta_close,dis_close)
             bullet_supply_pos = None
+            delta_bullet = np.full(2,fill_value=1e3)
+            dis_bullet = 2e5
             if self.bullet_supply.active:
                 if self.bullet_supply.rect.top > 0:
                     bullet_supply_pos = (self.bullet_supply.rect.left, self.bullet_supply.rect.top)
+                    delta_bullet = np.array(self.bullet_supply.rect.center)-me_center
+                    dis_bullet = np.sum(np.abs(delta_bullet))
             
             bomb_supply_pos = None
+            delta_bomb = np.full(2,fill_value=1e3)
+            dis_bomb = 2e5
             if self.bomb_supply.active:
                 if self.bomb_supply.rect.top > 0:
                     bomb_supply_pos = (self.bomb_supply.rect.left, self.bomb_supply.rect.top)
+                    delta_bomb = np.array(self.bomb_supply.rect.center)-me_center
+                    dis_bomb = np.sum(np.abs(delta_bomb))
             self._draw_frame()
+            # feature_vector = np.concatenate((me_center,delta_close,[dis_close],delta_bomb,[dis_bomb],delta_bullet,[dis_bullet],[s_cnt + 3*m_cnt + 5*b_cnt]))
+            feature_vector = np.concatenate((me_center,delta_close,delta_second,delta_third,delta_bomb,delta_bullet,[s_cnt + 3*m_cnt + 5*b_cnt]))
+
+
         elif self.life_num == 0:
             # 结束游戏之后开始下一局训练
-            reward = -1
+            feature_vector = np.full(13,fill_value=-1e5)
+            reward = -10
             Terminal = True
         self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -334,8 +380,10 @@ class GameState:
 
         pygame.display.flip()
         self.clock.tick(60)    
-        image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-        return image_data,self.reward,Terminal,self.score
+        # image_data = pygame.surfarray.array3d(pygame.display.get_surface())
+        # print(feature_vector.shape)
+        # print(feature_vector)
+        return feature_vector,self.reward,Terminal,self.score
     def print_info(self) -> None:
         """Print一些信息"""
         print_green("Me top={}, left={} ".format(self.me.rect.top, self.me.rect.left), end='')
@@ -559,7 +607,7 @@ class GameState:
                     self.e3_destroy_index = (self.e3_destroy_index + 1) % 6
                     if self.e3_destroy_index == 0:
                         self.score += 10000
-                        self.reward = 5
+                        self.reward += 5
                         each.reset()
                         self.sounds['enemy3_flying'].stop()
 
@@ -595,8 +643,7 @@ class GameState:
                     self.e2_destroy_index = (self.e2_destroy_index + 1) % 4
                     if self.e2_destroy_index == 0:
                         self.score += 6000
-                        self.reward = 3
-                        reward = 2
+                        self.reward += 3
                         each.reset()
 
         # 绘制小型敌机
@@ -613,7 +660,7 @@ class GameState:
                     self.e1_destroy_index = (self.e1_destroy_index + 1) % 4
                     if self.e1_destroy_index == 0:
                         self.score += 1000
-                        self.reward = 1
+                        self.reward += 1
                         each.reset()
 
         # 检测我方飞机是否被撞

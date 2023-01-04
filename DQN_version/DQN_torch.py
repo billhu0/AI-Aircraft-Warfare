@@ -40,28 +40,29 @@ class DQN(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.conv_layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, stride=3, padding=2),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),            
-        )
-        self.conv_layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, stride=2, padding=2),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),            
-        )
-        self.layer1 = nn.Linear(18560, 128)
+        # self.conv_layer1 = nn.Sequential(
+        #     nn.Conv2d(1, 16, kernel_size=5, stride=3, padding=2),
+        #     nn.BatchNorm2d(16),
+        #     nn.ReLU(),
+        #     nn.MaxPool2d(kernel_size=2, stride=2),            
+        # )
+        # self.conv_layer2 = nn.Sequential(
+        #     nn.Conv2d(16, 32, kernel_size=5, stride=2, padding=2),
+        #     nn.BatchNorm2d(32),
+        #     nn.ReLU(),
+        #     nn.MaxPool2d(kernel_size=2, stride=2),            
+        # )
+        # self.layer1 = nn.Linear(18560, 128)
+        self.layer1 = nn.Linear(n_observations, 128)
         self.layer2 = nn.Linear(128, 128)
         self.layer3 = nn.Linear(128, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x=self.conv_layer1(x)
-        x=self.conv_layer2(x)
-        x = x.reshape(x.size(0), -1)
+        # x=self.conv_layer1(x)
+        # x=self.conv_layer2(x)
+        # x = x.reshape(x.size(0), -1)
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         return self.layer3(x)
@@ -82,7 +83,7 @@ TAU = 0.005
 LR = 1e-4
 
 # Get number of actions from gym action space
-action_space = range(6)
+action_space = range(4)
 n_actions = len(action_space)
 
 
@@ -90,9 +91,9 @@ plane = game.GameState()
 action0 = torch.tensor([[0]],device=device, dtype=torch.long) 
 observation0, reward0, terminal,_ = plane.frame_step(action0)
 
-observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
-ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
-observation0 = np.reshape(observation0,(80,80,1))
+# observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
+# ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
+# observation0 = np.reshape(observation0,(80,80,1))
 # observation0 = torch.flatten(torch.tensor(observation0))
 n_observations = len(observation0)
 # print(n_observations)
@@ -109,7 +110,22 @@ memory = ReplayMemory(10000)
 steps_done = 0
 
 
-def select_action(state):
+def select_action(plane_game, state):
+    # s_cnt = 0
+    # m_cnt = 0
+    # b_cnt = 0
+    # for enemy_1 in plane_game.small_enemies.sprites():
+    #     if enemy_1.rect.top > 0:
+    #         s_cnt += 1
+    # for enemy_2 in plane_game.mid_enemies.sprites():
+    #     if enemy_2.rect.top > 0:
+    #         m_cnt += 1
+    # for enemy_3 in plane_game.big_enemies.sprites():
+    #     if enemy_3.rect.top > 0:
+    #         b_cnt += 1
+    # if s_cnt + 3*m_cnt + 5*b_cnt > 6:
+    #     if plane_game.bomb_num:
+    #         return torch.tensor([[3]], device=device, dtype=torch.long)
     global steps_done
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
@@ -184,20 +200,20 @@ def playPlane():
         plane = game.GameState()
         action0 = torch.tensor([[0]],device=device, dtype=torch.long)  # [1,0,0]do nothing,[0,1,0]left,[0,0,1]right
         observation0, reward0, terminal,_ = plane.frame_step(action0)
-        observation0,temp = preprocess(observation0)
+        # observation0,temp = preprocess(observation0)
         # print("-------------------------")
-        print(temp.shape)
+        # print(temp.shape)
         # observation0 = torch.flatten(torch.tensor(observation0))
         state = torch.tensor(observation0, dtype=torch.float32, device=device).unsqueeze(0)
         for t in count():
             # print(t)
-            action = select_action(state)
+            action = select_action(plane, state)
             #observation, reward, terminated, truncated, _ = env.step(action.item())
             observation,reward,terminated,score = plane.frame_step(action)
             # if reward > max_score:
             #     with open("score.txt","w") as f:
             #         f.write(str(score))
-            observation,temp = preprocess(observation)
+            # observation,temp = preprocess(observation)
             # observation = torch.flatten(torch.tensor(observation))
             reward = torch.tensor([reward], device=device)
             #done = terminated or truncated
@@ -224,8 +240,8 @@ def playPlane():
         # cv2.imshow('imshow',observation0)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-        observation0,temp = preprocess(observation0)
-        print(temp.shape)
+        # observation0,temp = preprocess(observation0)
+        # print(temp.shape)
         
         # print("-------------------------")
         print("Episode {} Start.".format(i_episode))
@@ -234,13 +250,13 @@ def playPlane():
 
         for t in count():
             # print(t)
-            action = select_action(state)
+            action = select_action(plane, state)
             #observation, reward, terminated, truncated, _ = env.step(action.item())
             observation,reward,terminated,score = plane.frame_step(action)
             # if reward > max_score:
             #     with open("score.txt","w") as f:
             #         f.write(str(score))
-            observation,temp = preprocess(observation)
+            # observation,temp = preprocess(observation)
             # cv2.imshow('imshow',cv2.resize(np.reshape(temp,(480,700)),(350,240)))
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
@@ -257,7 +273,7 @@ def playPlane():
                     torch.save(target_net.state_dict(), './model/target_best.pth')
                     torch.save(policy_net.state_dict(), './model/policy_best.pth')
                 with open("score.txt","a") as f:
-                    f.write("Score: {}, Max Score: {}, Episode: {}.".format(score,max_score,i_episode))
+                    f.write("Score: {}, Max Score: {}, Episode: {}.\n".format(score,max_score,i_episode))
             else:
                 next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
 
