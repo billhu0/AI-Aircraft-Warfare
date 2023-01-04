@@ -9,7 +9,6 @@ from itertools import count
 from collections import deque,namedtuple
 import cv2
 import sys
-sys.path.append("game/")
 import plane as game
 
 # if gpu is to be used
@@ -64,7 +63,7 @@ TAU = 0.005
 LR = 1e-4
 
 # Get number of actions from gym action space
-action_space = range(5)
+action_space = range(3)
 n_actions = len(action_space)
 
 
@@ -187,9 +186,6 @@ def playPlane():
                 next_state = None
                 # with open("score.txt","a") as f:
                 #     f.write(str(score))
-                if score >= max_score:
-                    print(score)
-                    max_score = score
             else:
                 next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
 
