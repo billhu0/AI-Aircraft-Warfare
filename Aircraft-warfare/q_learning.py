@@ -8,7 +8,7 @@ import math
 
 
 class QLearning:
-    def __init__(self, learningRate=0.000001, discount=0.9, explorationRate=0.05, numTraining=100): #调整了一下epsilon
+    def __init__(self, learningRate=0.000001, discount=0.9, explorationRate=0, numTraining=100): #调整了一下epsilon
         self.actions = ["right", "left", "up", "down", "bomb"]
         self.alpha = learningRate
         self.gamma = discount
@@ -70,6 +70,10 @@ class approximateQlearning(QLearning):
             if value > maxValue:
                 maxValue = value
                 bestAction = action
+        # if bestAction=="bomb":
+        for action in self.actions:
+            value = self.getQValue(state, action)
+            print("action",action,"value",value)
         return bestAction
 
     def getAction(self, state):
@@ -81,20 +85,20 @@ class approximateQlearning(QLearning):
         return action
 
     def update(self, state, action, nextState, reward):
-        difference = reward + self.gamma * \
-            self.computeValueFromQValues(nextState) - self.getQValue(state, action)
-        print(reward)
-        print(reward + self.gamma * \
-            self.computeValueFromQValues(nextState))
-        print(self.getQValue(state, action))
-        print(difference)
-        print(self.weights)
-        for feature in self.features:
-            self.weights[feature] += self.alpha * difference * self.features[feature]
-        self.weights.normalize()
-        print(self.weights)
-        self.StoreWeights()
-        # print(self.weights)
+            difference = reward + self.gamma * \
+                self.computeValueFromQValues(nextState) - self.getQValue(state, action)
+            # print(reward)
+            # print(reward + self.gamma * \
+            #     self.computeValueFromQValues(nextState))
+            # print(self.getQValue(state, action))
+            # print(difference)
+            # print(self.weights)
+            for feature in self.features:
+                self.weights[feature] += self.alpha * difference * self.features[feature]
+            self.weights.normalize()
+            # print(self.weights)
+            self.StoreWeights()
+            # print(self.weights)
 
     def computeValueFromQValues(self, state):
         maxValue = float('-Inf')
@@ -104,7 +108,7 @@ class approximateQlearning(QLearning):
     def StoreWeights(self):
         with open('parameter.txt', 'w') as f:
             for key in self.weights.keys():
-                print(key)
+                # print(key)
                 if key == list(self.weights.keys())[-1]:
                     f.write("%f" % (self.weights[key]))
                 else: 
