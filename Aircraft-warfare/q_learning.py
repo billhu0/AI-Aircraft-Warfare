@@ -82,8 +82,6 @@ class approximateQlearning(QLearning):
             action = random.choice(self.actions)
         else:
             action = self.computeActionFromQValues(state)
-        if action=="bomb":
-            print("1111111111111111111111111111")
         return action
 
     def update(self, state, action, nextState, reward):
