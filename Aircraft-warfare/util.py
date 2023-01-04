@@ -1,9 +1,8 @@
 import random
 
 
-def flipCoin(prob):
-    tmp = random.random()
-    return tmp < prob
+def flipCoin(prob: float) -> bool:
+    return random.random() < prob
 
 
 class Counter(dict):

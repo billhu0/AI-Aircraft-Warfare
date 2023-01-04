@@ -1,9 +1,0 @@
-newState.assignData(score=score, 
-                                    mePos=(me.rect.left, me.rect.top),
-                                    enemy_num=len(enemyPos), 
-                                    enemyPos=enemyPos, 
-                                    life_num=life_num, 
-                                    bullet_supply=bullet_supply.active, 
-                                    bomb_num=bomb_num, 
-                                    bullet_supply_pos=bullet_supply_pos, 
-                                    bomb_supply_pos=bomb_supply_pos)

@@ -10,12 +10,16 @@ from collections import deque,namedtuple
 import cv2
 import sys
 import plane as game
+import argparse
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--mode", type=str, help="train/display")
+args = parser.parse_args()
 
 class ReplayMemory(object):
 
@@ -36,13 +40,28 @@ class DQN(nn.Module):
 
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
+        self.conv_layer1 = nn.Sequential(
+            nn.Conv2d(1, 16, kernel_size=5, stride=3, padding=2),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),            
+        )
+        self.conv_layer2 = nn.Sequential(
+            nn.Conv2d(16, 32, kernel_size=5, stride=2, padding=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),            
+        )
+        self.layer1 = nn.Linear(18560, 128)
         self.layer2 = nn.Linear(128, 128)
         self.layer3 = nn.Linear(128, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
+        x=self.conv_layer1(x)
+        x=self.conv_layer2(x)
+        x = x.reshape(x.size(0), -1)
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         return self.layer3(x)
@@ -63,7 +82,7 @@ TAU = 0.005
 LR = 1e-4
 
 # Get number of actions from gym action space
-action_space = range(3)
+action_space = range(6)
 n_actions = len(action_space)
 
 
@@ -74,7 +93,7 @@ observation0, reward0, terminal,_ = plane.frame_step(action0)
 observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
 ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
 observation0 = np.reshape(observation0,(80,80,1))
-observation0 = torch.flatten(torch.tensor(observation0))
+# observation0 = torch.flatten(torch.tensor(observation0))
 n_observations = len(observation0)
 # print(n_observations)
 # print("------------------------")
@@ -100,7 +119,7 @@ def select_action(state):
         with torch.no_grad():
             return policy_net(state).max(1)[1].view(1, 1)
     else:
-        return torch.tensor([[np.random.choice(range(3))]], device=device, dtype=torch.long)
+        return torch.tensor([[np.random.choice(action_space)]], device=device, dtype=torch.long)
 
 
 episode_durations = []
@@ -142,12 +161,13 @@ def optimize_model():
     torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()
 
-# preprocess raw image to 80*80 gray image
-def preprocess(observation):
-	observation = cv2.cvtColor(cv2.resize(observation, (80, 80)), cv2.COLOR_BGR2GRAY)#灰度转化
-	ret, observation = cv2.threshold(observation,1,255,cv2.THRESH_BINARY)
-	return np.reshape(observation,(80,80,1))
 
+ # preprocess raw image to 80*80 gray image
+def preprocess(img_obs):
+	# img_obs = cv2.cvtColor(cv2.resize(img_obs, (80, 80)), cv2.COLOR_BGR2GRAY)#
+	img_obs = cv2.cvtColor(img_obs, cv2.COLOR_BGR2GRAY)#
+	ret, img_obs = cv2.threshold(img_obs,1,255,cv2.THRESH_BINARY)
+	return np.reshape(img_obs,(1,480,700)),img_obs
 
 
 def playPlane():
@@ -156,16 +176,60 @@ def playPlane():
 	# observation0, reward0, terminal = plane.frame_step(action0)
 	# observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
 	# ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
+    if args.mode == 'display':
+        target_net.load_state_dict(torch.load('./model/target.pkl'))
+        policy_net.load_state_dict(torch.load('./model/policy.pkl'))
+        target_net.to(device)
+        policy_net.to(device)
+        plane = game.GameState()
+        action0 = torch.tensor([[0]],device=device, dtype=torch.long)  # [1,0,0]do nothing,[0,1,0]left,[0,0,1]right
+        observation0, reward0, terminal,_ = plane.frame_step(action0)
+        observation0,temp = preprocess(observation0)
+        # print("-------------------------")
+        print(temp.shape)
+        # observation0 = torch.flatten(torch.tensor(observation0))
+        state = torch.tensor(observation0, dtype=torch.float32, device=device).unsqueeze(0)
+        for t in count():
+            # print(t)
+            action = select_action(state)
+            #observation, reward, terminated, truncated, _ = env.step(action.item())
+            observation,reward,terminated,score = plane.frame_step(action)
+            # if reward > max_score:
+            #     with open("score.txt","w") as f:
+            #         f.write(str(score))
+            observation,temp = preprocess(observation)
+            # observation = torch.flatten(torch.tensor(observation))
+            reward = torch.tensor([reward], device=device)
+            #done = terminated or truncated
+            done = terminated
+
+            if terminated:
+                next_state = None
+                # with open("score.txt","a") as f:
+                #     f.write(str(score))
+            else:
+                next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
+            # Move to the next state
+            state = next_state
+
+            if done:
+                break
+        return
     max_score = 0
     num_episodes = 600
     for i_episode in range(num_episodes):
         plane = game.GameState()
         action0 = torch.tensor([[0]],device=device, dtype=torch.long)  # [1,0,0]do nothing,[0,1,0]left,[0,0,1]right
         observation0, reward0, terminal,_ = plane.frame_step(action0)
-        observation0 = preprocess(observation0)
+        # cv2.imshow('imshow',observation0)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        observation0,temp = preprocess(observation0)
+        print(temp.shape)
+        
         # print("-------------------------")
-        # print(observation0)
-        observation0 = torch.flatten(torch.tensor(observation0))
+        print("Episode {} Start.".format(i_episode))
+        # observation0 = torch.flatten(torch.tensor(observation0))
         state = torch.tensor(observation0, dtype=torch.float32, device=device).unsqueeze(0)
 
         for t in count():
@@ -176,16 +240,24 @@ def playPlane():
             # if reward > max_score:
             #     with open("score.txt","w") as f:
             #         f.write(str(score))
-            observation = preprocess(observation)
-            observation = torch.flatten(torch.tensor(observation))
+            observation,temp = preprocess(observation)
+            # cv2.imshow('imshow',cv2.resize(np.reshape(temp,(480,700)),(350,240)))
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            # observation = torch.flatten(torch.tensor(observation))
             reward = torch.tensor([reward], device=device)
             #done = terminated or truncated
             done = terminated
 
             if terminated:
                 next_state = None
-                # with open("score.txt","a") as f:
-                #     f.write(str(score))
+                if score >= max_score:
+                    max_score = score
+                    print("Max Score Update: {}.".format(max_score))
+                    torch.save(target_net.state_dict(), './model/target_best.pth')
+                    torch.save(policy_net.state_dict(), './model/policy_best.pth')
+                with open("score.txt","a") as f:
+                    f.write("Score: {}, Max Score: {}, Episode: {}.".format(score,max_score,i_episode))
             else:
                 next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
 
@@ -211,8 +283,11 @@ def playPlane():
                 break
         if i_episode % 10 == 0:
             print("We have finsh: "+str(i_episode))
-            torch.save(target_net_state_dict,"./target.pkl")
-            torch.save(policy_net_state_dict,"./policy.pkl")
+            torch.save(target_net_state_dict,"./model/target_{}.pth".format(int(i_episode/10)))
+            torch.save(policy_net_state_dict,"./model/policy_{}.pth".format(int(i_episode/10)))
+            
+    torch.save(target_net_state_dict,"./model/target.pth")
+    torch.save(policy_net_state_dict,"./model/policy.pth")
 
 def main():
 	playPlane()
