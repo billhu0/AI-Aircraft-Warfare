@@ -236,13 +236,13 @@ class PlaneWar:
                     enemyPos = []
                     for enemy_1 in self.small_enemies.sprites():
                         if enemy_1.rect.top > 0:
-                            enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
+                            enemyPos.append(((enemy_1.rect.left+enemy_1.rect.right)/2, (enemy_1.rect.top+enemy_1.rect.bottom)/2))
                     for enemy_2 in self.mid_enemies.sprites():
                         if enemy_2.rect.top > 0:
-                            enemyPos.append((enemy_2.rect.left, enemy_2.rect.top))
+                            enemyPos.append(((enemy_2.rect.left+enemy_2.rect.right)/2, (enemy_2.rect.top+enemy_2.rect.bottom)/2))
                     for enemy_3 in self.big_enemies.sprites():
                         if enemy_3.rect.top > 0:
-                            enemyPos.append((enemy_3.rect.left, enemy_3.rect.top))
+                            enemyPos.append(((enemy_3.rect.left+enemy_3.rect.right)/2, (enemy_3.rect.top+enemy_3.rect.bottom)/2))
                     
                     bullet_supply_pos = None
                     if self.bullet_supply.active:
@@ -256,7 +256,7 @@ class PlaneWar:
                             
                     newState.assignData(
                         score=self.score,
-                        mePos=(self.me.rect.left+13, self.me.rect.top),
+                        mePos=((self.me.rect.left+self.me.rect.right)/2, (self.me.rect.top+self.me.rect.bottom)/2),
                         enemy_num=len(enemyPos),
                         enemyPos=enemyPos,
                         life_num=self.life_num,

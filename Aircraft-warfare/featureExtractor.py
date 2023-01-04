@@ -30,7 +30,7 @@ def plane_move(pos1, move):
 def calculate_distance_score(pos1, pos2, move):
     # 此函数计算我方飞机和其他飞机的距离分数，在小于某个阈值时，我方飞机偏向于远离其他飞机，大于某个阈值时，我方飞机偏向于靠近其他飞机（尽量采取左右移动）
     if pos2 == None:
-        if manhattanDistance(plane_move(pos1, move), (200,500)) < manhattanDistance(pos1, (200,500)):
+        if manhattanDistance(plane_move(pos1, move), (250,550)) < manhattanDistance(pos1, (250,550)):
             # if move == "up" or move == "down":
             #     return 1500
             # else:
@@ -108,14 +108,13 @@ def getFeatures(state, action):
         enemyPos_1 = enemyPosList[0] if len(enemyPosList) > 0 else None
         if state.bomb_num > 0:
             if state.enemy_num > 6:
-                    feature["bomb"] = 500*state.enemy_num
+                    feature["bomb"] = 120*state.enemy_num
             else:
-                feature["bomb"] = 400*state.enemy_num
+                feature["bomb"] = 50*state.enemy_num
             if enemyPos_1 !=None and manhattanDistance(state.mePos, enemyPos_1) < 30:
-                feature["bomb"] = 6000
+                feature["bomb"] = 2000
         else:
             feature["bomb"] = 100
-        feature["bomb"]=50
         feature["distance_score"] = 50
         feature["get_bombs"] = 50
         feature["get_double_bullet"] = 50
