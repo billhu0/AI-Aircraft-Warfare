@@ -380,7 +380,7 @@ class GameState:
             if self.me.invincible:
                 is_invincible = 1
             # feature_vector = np.concatenate((me_center,delta_close,[dis_close],delta_bomb,[dis_bomb],delta_bullet,[dis_bullet],[s_cnt + 3*m_cnt + 5*b_cnt]))
-            feature_vector = np.concatenate((me_center,delta_close,delta_bomb,delta_bullet,[s_cnt + 3*m_cnt + 5*b_cnt],[self.life_num],[self.bomb_num],[is_double_bullet],[self.score],[close_kind]))
+            feature_vector = np.concatenate((me_center,delta_close,delta_bomb,delta_bullet,[s_cnt + 3*m_cnt + 5*b_cnt],[self.life_num],[self.bomb_num],[is_double_bullet],[close_kind]))
 
             self.reward = self.score - current_score
             if current_lifenum < self.life_num:
