@@ -77,8 +77,6 @@
 
 
 \section{Introduction}
-
-
 % @inproceedings{kempka2016vizdoom,
 % title={Vizdoom: A doom-based ai research platform for visual reinforcement learning},
 % author={Kempka, Micha{\l} and Wydmuch, Marek and Runc, Grzegorz and Toczek, Jakub and Ja{\'s}kowski, Wojciech},
@@ -120,11 +118,14 @@
     \label{fig:aircraft_warfare_game}
 \end{wrapfigure}
 
-\par Aircraft Warfare is a classic game we all enjoyed very much, which is also perfect for fully practicing what we have learned in class, as shown in Figure \ref{fig:aircraft_warfare_game}. The rule of the game is rather simple. Player (a upward facing aircraft plane)'s \textbf{goal} is to make the score as high as possible. The player can get \textbf{reward} by managing to hit enemies with five \textbf{actions}, namely, up, down, left, right, and using the bomb.  The \textbf{state} includes the life value and positions of player and enemies and so on. Game overs when life value decreases to 0.
+\par Aircraft Warfare is a classic game we all enjoyed very much, which is also perfect for fully practicing what we have learned in class, as shown in Figure \ref{fig:aircraft_warfare_game}. The rule of the game is rather simple. The \textbf{goal} of the player -- a upward facing aircraft plane -- is to make the score as high as possible. The player can get \textbf{reward} by managing to hit enemies -- downward facing aircraft planes -- with five \textbf{actions}, namely, up, down, left, right, and using the bomb.  The \textbf{state} includes the life value and positions of player and enemies and so on. Game overs when life value decreases to 0.
 
 \par However, playing the game well is quit tough when it comes to difficult mode. Hence we turn to AI for help. To the best of our knowledge, reinforcement learning has shown to be very successful in mastering control policies in lots of tasks such as object recognition and solving physics-based control problems\cite{}. Specially, Deep Q-Networks (DQN) are proved to be effective in playing games and even could defeat top human Go players\cite{}. The reason they can work well is that games can quickly generate large amounts of naturally self-annotated (state-action-reward) data, which are high-quality training material for reinforcement learning. That is, this property of games allows deep reinforcement learning to obtain a large number of samples for training to enhance the effect almost costlessly. For example, DeepMind's achievements such as playing Atari with DQN, AlphaGo defeating Go masters, AlphaZero becoming a self-taught master of Go and Chess. And OpenAI's main research is based on games, such as the progress made in Dota. For these reasons, we believe that training agents based on deep reinforcement learning techniques is a promising solution
 
-\par In this paper, we implement an AI-agent for playing the Aircraft Warfare with Q-learning method and Deep Q-learning method. 
+\par In this paper, we implement an AI-agent for playing the Aircraft Warfare with Approximate Q-learning method and Deep Q-learning method. For Approximate Q-learning, we extracted four most useful features, i.e., interactions with the closest aircraft, bomb supply, double bullet, and the trade-off between movement and explosion. We trained our agent with an online learning method. For Deep Q-learning, we utilize a convolutional neural network which takes the screen patch as input and outputs the expected converged sum of the discounted reward of taking each action given the current state of the 6 legal actions. We also trained two DQN in case overfitting. 
+
+\par result...
+
 % 未完待续
     % In brief, players need to control the plane movement through the up, down, left and right keys on the keyboard, or shoot bullets to destroy the enemy aircrafts (downward facing aircrafts) to obtain points. 
 
@@ -158,7 +159,7 @@
     \subsection{Approximate Q-learning}
         Since the number of states in the Aircraft Warfare Game is extremely large, we choose Approximate Q-learning for reinforcement learning. 
     \subsubsection{Feature Extraction}
-        In total, we extracted four features, which are the interaction with the closest aircraft, the interaction with bomb supply, the interaction with double bullet , and the trade-off between movement and explosion.The following will explain in detail how the features are extracted.
+        In total, we extracted four features, which are the interaction with the closest aircraft, the interaction with bomb supply, the interaction with double bullet , and the trade-off between movement and explosion. The following will explain in detail how the features are extracted.
         \[Q(s,a) = w_1f_1(s,a)+w_2f_2(s,a)+w_3f_3(s,a)+w_4f_4(s,a)\]
     
         In this game, it is very necessary to control the distance between our aircraft and enemy aircraft and props.Thus,we use the Manhattan distance to measure the interaction of the aircraft with the external environment. For the current state $s$, we observe the location of the nearest enemies, game props to the aircraft. Next, we analyze the effect of action $a$ on the Manhattan distance between the aircraft and the aforementioned target. The weights corresponding to each of these features reflect the choices and trade-offs made by the aircraft in various situations.The purpose of the plane's actions can be highly summarized as attacking, dodging, and picking up props. Both affect the value of $Q(s,a)$ and the training of Approximate Q-learning.
@@ -183,9 +184,9 @@
     \subsection{Deep Q Network}
     % DQN属于DRL（深度强化学习）的一种，它是深度学习与Q学习的结合体。前面讲了采用S-A表格的局限性，当状态和行为的组合不可穷尽时，就无法通过查表的方式选取最优的Action了。这时候就该想到深度学习了，想通过深度学习找到最优解在很多情况下确实不太靠谱，但是找到一个无限逼近最优解的次优解，倒是没有问题的。
     % 因此DQN实际上，总体思路还是用的Q学习的思路，不过对于给定状态选取哪个动作所能得到的Q值，却是由一个深度神经网络来计算的了
-    Deep Q Network is a kind of Deep Reinforcement Learning, which is a combination of Deep Learning and Q-learning. Due to the limitations of Q-learning that it is impossible to choose the best action when the number of combinations of states and actions is infinite, using a deep neural network to help determine the action is reasonable.
+    Deep Q Network is a kind of Deep Reinforcement Learning, which is a combination of Deep Learning and Q-learning. Due to the limitations of Q-learning that it is impossible to choose the best action when the number of combinations of states and actions is infinite, using a deep neural network to help determine the action is reasonable. 
     
-    \subsubsection{DQN algorithm} In the Aircraft Warfare Game the environment is deterministic, so all the equations listed below are formulated deterministically for simplicity. Our aim will be to train a policy that can maximize the cumulative,discounted reward $R_{t_0} = \sum_{t=t_0}^{\infty} {\gamma}^{t-t_0}r_t$,here the $\gamma$ is the discount factor,which should be a constant between 0 and 1 to make sure the sum can converge.In the Q-learning algorithm, we get a table of the $Q$ values of the combinations of states and actions, then we construct a policy that maximizes the rewards:
+    \subsubsection{DQN algorithm} In the Aircraft Warfare Game the environment is deterministic, so all the equations listed below are formulated deterministically for simplicity. Our aim will be to train a policy that can maximize the cumulative, discounted reward $R_{t_0} = \sum_{t=t_0}^{\infty} {\gamma}^{t-t_0}r_t$,here the $\gamma$ is the discount factor,which should be a constant between 0 and 1 to make sure the sum can converge.In the Q-learning algorithm, we get a table of the $Q$ values of the combinations of states and actions, then we construct a policy that maximizes the rewards:
     $$\pi^*(s) = \arg\!\max_a \ Q^*(s, a)$$
     However, since the number of the combinations of states and actions is infinite in this scene, so we use a neural network to resemble $Q^*$. And by Bellman equation,we get:
     $$Q^{\pi}(s, a) = r + \gamma Q^{\pi}(s', \pi(s'))$$
