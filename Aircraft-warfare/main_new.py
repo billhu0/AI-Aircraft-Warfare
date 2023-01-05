@@ -110,7 +110,7 @@ class PlaneWar:
         self.bullet_1_index = 0
 
         # 生成超级子弹 Generate super bullets
-        self.bullet_2 = [bullet.Bullet2((self.me.rect.centerx - 33, self.me.rect.centery)) for _ in range(8)]
+        self.bullet_2 = [bullet.Bullet2((self.me.rect.centerx - 23, self.me.rect.centery)) for _ in range(8)]
         self.bullet_2_index = 0
 
         # 中弹图片索引
@@ -456,8 +456,8 @@ class PlaneWar:
             self.sounds['bullet'].play()
             if self.is_double_bullet:
                 bullets = self.bullet_2
-                bullets[self.bullet_2_index].reset((self.me.rect.centerx - 33, self.me.rect.centery))
-                bullets[self.bullet_2_index + 1].reset((self.me.rect.centerx + 30, self.me.rect.centery))
+                bullets[self.bullet_2_index].reset((self.me.rect.centerx - 23, self.me.rect.centery))
+                bullets[self.bullet_2_index + 1].reset((self.me.rect.centerx + 20, self.me.rect.centery))
                 self.bullet_2_index = (self.bullet_2_index + 2) % 8
             else:
                 bullets = self.bullet_1
