@@ -274,6 +274,8 @@ class GameState:
             self.clock.tick(60)
             
     def frame_step(self,action):
+        current_score = self.score
+        current_lifenum = self.life_num
         Terminal = False
         self.reward = 0.1
         #self.print_info()
@@ -303,6 +305,9 @@ class GameState:
             delta_second = np.full(2,fill_value=1e3)
             delta_third = np.full(2,fill_value=1e3)
             dis_close = 2e5
+            close_kind  = 0
+            second_kind = 0
+            third_kind = 0
             enemyPos = []
             s_cnt = 0
             m_cnt = 0
@@ -315,6 +320,9 @@ class GameState:
                         delta_third = delta_second
                         delta_second = delta_close
                         delta_close = enemy_center-me_center
+                        third_kind = second_kind
+                        second_kind = close_kind
+                        close_kind = 1
                         dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_1.rect.left, enemy_1.rect.top))
 
@@ -326,6 +334,9 @@ class GameState:
                         delta_third = delta_second
                         delta_second = delta_close
                         delta_close = enemy_center-me_center
+                        third_kind = second_kind
+                        second_kind = close_kind
+                        close_kind = 2
                         dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_2.rect.left, enemy_2.rect.top))
             for enemy_3 in self.big_enemies.sprites():
@@ -336,6 +347,9 @@ class GameState:
                         delta_third = delta_second
                         delta_second = delta_close
                         delta_close = enemy_center-me_center
+                        third_kind = second_kind
+                        second_kind = close_kind
+                        close_kind = 3
                         dis_close = np.sum(np.abs(delta_close))
                     enemyPos.append((enemy_3.rect.left, enemy_3.rect.top))
             # print(self.me.rect)
@@ -359,14 +373,22 @@ class GameState:
                     delta_bomb = np.array(self.bomb_supply.rect.center)-me_center
                     dis_bomb = np.sum(np.abs(delta_bomb))
             self._draw_frame()
+            is_double_bullet = 0
+            if self.is_double_bullet:
+                is_double_bullet = 1
+            is_invincible = 0
+            if self.me.invincible:
+                is_invincible = 1
             # feature_vector = np.concatenate((me_center,delta_close,[dis_close],delta_bomb,[dis_bomb],delta_bullet,[dis_bullet],[s_cnt + 3*m_cnt + 5*b_cnt]))
-            feature_vector = np.concatenate((me_center,delta_close,delta_second,delta_third,delta_bomb,delta_bullet,[s_cnt + 3*m_cnt + 5*b_cnt]))
+            feature_vector = np.concatenate((me_center,delta_close,delta_bomb,delta_bullet,[s_cnt + 3*m_cnt + 5*b_cnt],[self.life_num],[self.bomb_num],[is_double_bullet],[close_kind]))
 
-
+            self.reward = self.score - current_score
+            if current_lifenum < self.life_num:
+                self.reward = -15000
         elif self.life_num == 0:
             # 结束游戏之后开始下一局训练
-            feature_vector = np.full(13,fill_value=-1e5)
-            reward = -10
+            feature_vector = np.full(14,fill_value=-1e5)
+            self.reward = -20000
             Terminal = True
         self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -607,7 +629,7 @@ class GameState:
                     self.e3_destroy_index = (self.e3_destroy_index + 1) % 6
                     if self.e3_destroy_index == 0:
                         self.score += 10000
-                        self.reward += 5
+                        # self.reward += 5
                         each.reset()
                         self.sounds['enemy3_flying'].stop()
 
@@ -643,7 +665,7 @@ class GameState:
                     self.e2_destroy_index = (self.e2_destroy_index + 1) % 4
                     if self.e2_destroy_index == 0:
                         self.score += 6000
-                        self.reward += 3
+                        # self.reward += 3
                         each.reset()
 
         # 绘制小型敌机
@@ -660,13 +682,14 @@ class GameState:
                     self.e1_destroy_index = (self.e1_destroy_index + 1) % 4
                     if self.e1_destroy_index == 0:
                         self.score += 1000
-                        self.reward += 1
+                        # self.reward += 1
                         each.reset()
 
         # 检测我方飞机是否被撞
         enemies_down = pygame.sprite.spritecollide(self.me, self.enemies, False, pygame.sprite.collide_mask)
         if enemies_down and not self.me.invincible:
             self.me.active = False
+            # self.reward = -20000
             for e in enemies_down:
                 e.active = False
 
