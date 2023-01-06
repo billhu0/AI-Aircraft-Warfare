@@ -12,7 +12,7 @@ import sys
 import plane as game
 import argparse
 
-# if gpu is to be used
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -94,14 +94,9 @@ plane = game.GameState()
 action0 = torch.tensor([[0]],device=device, dtype=torch.long) 
 observation0, reward0, terminal,_ = plane.frame_step(action0)
 
-# observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
-# ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
-# observation0 = np.reshape(observation0,(80,80,1))
-# observation0 = torch.flatten(torch.tensor(observation0))
+
 n_observations = len(observation0)
-# print(n_observations)
-# print("------------------------")
-# print(observation0)
+
 policy_net = DQN(n_observations, n_actions).to(device)
 target_net = DQN(n_observations, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
@@ -169,7 +164,7 @@ def cal_action(plane_game, state):
         delta_close = np.array(state[2:4])
         delta_bomb = np.array(state[4:6])
         delta_bullet = np.array(state[6:8])
-        bomb_cnt = np.array(state[-4])
+        bomb_cnt = np.array(state[-3])
         is_double = np.array(state[-2])
         delta_supply = np.full(2,1e3)
         type_close = int(state[-1])
@@ -189,7 +184,11 @@ def cal_action(plane_game, state):
                 return torch.tensor([[1]], device=device, dtype=torch.long)
             else :
                 return torch.tensor([[2]], device=device, dtype=torch.long)
-
+        if abs(delta_close[0]) <= 13/2 and is_double and type_close == 1:
+            if me_center[0] >= 240:
+                return torch.tensor([[1]], device=device, dtype=torch.long)
+            else:
+                return torch.tensor([[2]], device=device, dtype=torch.long)
         if np.sum(dis_weight*np.abs(delta_close)) < dis_threshold[type_close]:
             if delta_close[0] < 0:
                 return torch.tensor([[2]], device=device, dtype=torch.long)
@@ -197,13 +196,16 @@ def cal_action(plane_game, state):
                 return torch.tensor([[1]], device=device, dtype=torch.long)
         else :
             if delta_close[0] == 0:
+                # if type_close == 1 and is_double:
+                #     return torch.tensor([[1]], device=device, dtype=torch.long)
                 return torch.tensor([[0]], device=device, dtype=torch.long)
 
-            elif delta_close[0] < 0:
+            if delta_close[0] < 0:
                 return torch.tensor([[1]], device=device, dtype=torch.long)
             else :
                 return torch.tensor([[2]], device=device, dtype=torch.long)
-
+        if delta_close[0] == 0 and type_close == 1 and is_double:
+                return torch.tensor([[1]], device=device, dtype=torch.long)
 episode_durations = []
 
 def optimize_model():
@@ -253,68 +255,45 @@ def preprocess(img_obs):
 
 
 def playPlane():
-	# plane = game.GameState()
-	# action0 = np.array([1,0,0])
-	# observation0, reward0, terminal = plane.frame_step(action0)
-	# observation0 = cv2.cvtColor(cv2.resize(observation0, (80, 80)), cv2.COLOR_BGR2GRAY)
-	# ret, observation0 = cv2.threshold(observation0,1,255,cv2.THRESH_BINARY)
     if args.mode == 'display':
-        # target_net.load_state_dict(torch.load('./model/target.pkl'))
-        # policy_net.load_state_dict(torch.load('./model/policy.pkl'))
-        # target_net.to(device)
-        # policy_net.to(device)
+        
         plane = game.GameState()
-        action0 = torch.tensor([[0]],device=device, dtype=torch.long)  # [1,0,0]do nothing,[0,1,0]left,[0,0,1]right
+        action0 = torch.tensor([[0]],device=device, dtype=torch.long)  
         observation0, reward0, terminal,_ = plane.frame_step(action0)
-        # observation0,temp = preprocess(observation0)
-        # print("-------------------------")
-        # print(temp.shape)
-        # observation0 = torch.flatten(torch.tensor(observation0))
+    
         state = torch.tensor(observation0, dtype=torch.float32, device=device).unsqueeze(0)
         for t in count():
-            # print(t)
-            # action = select_action(plane, state)
             action = cal_action(plane,state)
-            #observation, reward, terminated, truncated, _ = env.step(action.item())
+            
             observation,reward,terminated,score = plane.frame_step(action)
-            # if reward > max_score:
-            #     with open("score.txt","w") as f:
-            #         f.write(str(score))
-            # observation,temp = preprocess(observation)
-            # observation = torch.flatten(torch.tensor(observation))
+            
             reward = torch.tensor([reward], device=device)
-            #done = terminated or truncated
+           
             done = terminated
 
             if terminated:
                 next_state = None
-                # with open("score.txt","a") as f:
-                #     f.write(str(score))
+               
             else:
                 next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
-            # Move to the next state
             state = next_state
 
             if done:
                 break
         return
     max_score = 0
-    num_episodes = 600
+    #num_episodes = 600
     # for i_episode in range(num_episodes):
     i_episode = 0
-    while True:
+    while i_episode <= 5:
         plane = game.GameState()
-        action0 = torch.tensor([[0]],device=device, dtype=torch.long)  # [1,0,0]do nothing,[0,1,0]left,[0,0,1]right
+        action0 = torch.tensor([[0]],device=device, dtype=torch.long)  
         observation0, reward0, terminal,_ = plane.frame_step(action0)
-        # cv2.imshow('imshow',observation0)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # observation0,temp = preprocess(observation0)
-        # print(temp.shape)
+        
         
         # print("-------------------------")
         print("Episode {} Start.".format(i_episode))
-        # observation0 = torch.flatten(torch.tensor(observation0))
+        
         state = torch.tensor(observation0, dtype=torch.float32, device=device).unsqueeze(0)
 
         for t in count():
@@ -322,18 +301,10 @@ def playPlane():
             action = select_action(plane, state)
             action_score = policy_net(state).reshape(-1)
             ideal_action = cal_action(plane,state)
-            #observation, reward, terminated, truncated, _ = env.step(action.item())
+            
             observation,reward,terminated,score = plane.frame_step(action)
-            # if reward > max_score:
-            #     with open("score.txt","w") as f:
-            #         f.write(str(score))
-            # observation,temp = preprocess(observation)
-            # cv2.imshow('imshow',cv2.resize(np.reshape(temp,(480,700)),(350,240)))
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-            # observation = torch.flatten(torch.tensor(observation))
+            
             reward = torch.tensor([reward], device=device)
-            #done = terminated or truncated
             done = terminated
 
             if terminated:
@@ -348,49 +319,28 @@ def playPlane():
             else:
                 next_state = torch.tensor(observation, dtype=torch.float32, device=device).unsqueeze(0)
 
-            # Store the transition in memory
-            # memory.push(state, action, next_state, reward)
-
-            # Move to the next state
             state = next_state
 
-            # Perform one step of the optimization (on the policy network)
-            # optimize_model()
+            
             c_loss = nn.CrossEntropyLoss()
 
-            # loss = c_loss(torch.tensor(F.one_hot(action[0][0],num_classes=4),dtype=float,device=device,requires_grad=True),\
-            #     torch.tensor(F.one_hot(ideal_action[0][0],num_classes=4),dtype=float,device=device,requires_grad=True))
-            #print(action_score)
             loss = c_loss(action_score,\
                 torch.tensor(F.one_hot(ideal_action[0][0],num_classes=4),dtype=float,device=device,requires_grad=True))
-            #print(action,action_score,ideal_action,loss)
+            
             optimizer.zero_grad()
         
             loss.backward()
-            #print(loss.grad)
+            
             torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
             optimizer.step()
-
-
-            # Soft update of the target network's weights
-            # θ′ ← τ θ + (1 −τ )θ′
-            # target_net_state_dict = target_net.state_dict()
-            # policy_net_state_dict = policy_net.state_dict()
-            # for key in policy_net_state_dict:
-            #     target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-            # target_net.load_state_dict(target_net_state_dict)
 
             if done:
                 episode_durations.append(t + 1)
                 break
-        i_episode += 1
-        if i_episode % 10 == 0:
+        if i_episode % 5 <= 4:
             print("We have finsh: "+str(i_episode))
-            torch.save(target_net_state_dict,"./model/target_{}.pth".format(int(i_episode/10)))
-            torch.save(policy_net_state_dict,"./model/policy_{}.pth".format(int(i_episode/10)))
             
-    torch.save(target_net_state_dict,"./model/target.pth")
-    torch.save(policy_net_state_dict,"./model/policy.pth")
+        i_episode += 1    
 
 def main():
 	playPlane()
