@@ -25,15 +25,31 @@ def print_red(s: str, end: str or None = '\n') -> None:
     print("\033[37;41m{}\033[0m ".format(s), end=end)
 
 """
-这是重构过的游戏的类 class PlaneWar, 其中:
-    start() 方法是手动键盘控制游戏
-    train() 方法是q-learning训练
-    这两个方法里就是游戏的主要逻辑, 主要包含一个init操作和一个while True循环
+这是游戏的入口类 class PlaneWar, 其中:
+    start() 方法会开始一局游戏 (手动键盘控制, 不含机器操控);
+    train() 方法会开始使用Q-learning玩游戏, 并开始训练.
+其余的方法都是游戏框架原有的代码, 与Q-learning无关, 可以忽略.
+这两个方法里就是游戏的主要逻辑, 主要包含一个init操作和一个while True循环
         init_game() 中包含了一些 self.什么什么的成员变量，可以从这些变量获取游戏状态信息
         那个while循环就是游戏的主循环, 我们主要需要关注这个循环, 每一次循环都要更新state并进行相关操作
     move_me() 是手动键盘控制飞机的移动, 在手动控制游戏时会用到
     move_action() 是根据action移动飞机, 在q-learning训练时会用到
     其余的私有方法(用_开头的函数)是游戏框架原有的代码，可以不看
+
+例如, 你可以运行以下代码来观看AI玩游戏:
+    game = PlaneWar()
+    game.train()
+
+    
+This is the entry class of the game (class PlaneWar), where:
+    start() method will start a game (manual keyboard control, no machine operation);
+    train() method will start playing the game using Q-learning, and start the training as well.
+The rest methods are mainly the framework of the game, which is not important 
+for our Q-learning implementation. You may ignore them.
+
+For example, you can run the following code to watch AI playing the game:
+    game = PlaneWar()
+    game.train()
 """
 class PlaneWar:
 
@@ -90,7 +106,6 @@ class PlaneWar:
         It generates enemy aircraft, bullets, as well as initializes timers and game status information.
         在一局游戏开始前会调用这个函数.
         这个函数会生成我方飞机、敌机，以及初始化计时器和游戏状态信息.
-        (可以观察这个method中出现的变量, 游戏状态信息可以这么获取.
         """
 
         # Generate enemy aircraft and my aircraft 生成敌机和我方飞机
@@ -165,7 +180,7 @@ class PlaneWar:
         # Initialize game
         self.init_game()
 
-        # Main loop 主循环, 循环一次画一帧
+        # Main loop. A loop indicates a frame.
         while True:
             self._handle_events()
             self._add_difficulty()
@@ -177,22 +192,20 @@ class PlaneWar:
                 self._draw_frame()
             elif self.life_num == 0:
                 self._draw_game_over()
-                # 检测用户的鼠标操作
-                # 如果用户按下鼠标左键
+                # When user press the left mouse button, 
+                # check its position to determine whether the user wants 
+                # to restart the game or to quit it.
                 if pygame.mouse.get_pressed()[0]:
                     pos = pygame.mouse.get_pos()
-                    # 如果用户点击“重新开始”
+                    # If the user clicks 'restart', we restart the game.
                     if self.again_rect.left < pos[0] < self.again_rect.right and \
                             self.again_rect.top < pos[1] < self.again_rect.bottom:
-                        # 调用main函数，重新开始游戏
                         self.start()
-                    # 如果用户点击“结束游戏”
+                    # If the user clicks 'quit', we quit the program.
                     elif self.gameover_rect.left < pos[0] < self.gameover_rect.right and \
                             self.gameover_rect.top < pos[1] < self.gameover_rect.bottom:
-                        # 退出游戏
                         pygame.quit()
                         sys.exit()
-                        # 绘制暂停按钮
 
             self.screen.blit(self.paused_image, self.paused_rect)
 
@@ -294,7 +307,9 @@ class PlaneWar:
                 self.clock.tick(60)
 
     def print_info(self) -> None:
-        """Print一些信息"""
+        """
+        This function simply prints out some information (our position, enemy position, ...)
+        """
         print_green("Me top={}, left={} ".format(self.me.rect.top, self.me.rect.left), end='')
         print_green("Bomb {}".format(self.bomb_num), end='')
         for enemy_1 in self.small_enemies.sprites():
@@ -340,14 +355,6 @@ class PlaneWar:
                         self.pause_image = self.resume_nor_image
                     else:
                         self.pause_image = self.pause_nor_image
-            # elif event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_SPACE:
-            #         if self.bomb_num:
-            #             self.bomb_num -= 1
-            #             self.sounds['bomb'].play()
-            #             for each in self.enemies:
-            #                 if each.rect.bottom > 0:
-            #                     each.active = False
             elif event.type == self.SUPPLY_TIME:
                 self.sounds['supply'].play()
                 if random.choice([True, False]):
@@ -682,9 +689,12 @@ class PlaneWar:
 if __name__ == '__main__':
     try:
         game = PlaneWar()
-        # game.start()  # 键盘控制
-        game.train()  # Q-learning训练
-        # 这个类
+        
+        # if argv contains '-m', run manually
+        if len(sys.argv) > 1 and sys.argv[1] == '-m':
+            game.start() # Start a game (human keyboard control)
+        else:
+            game.train()  # Start a game (AI Q-learning control)
     except SystemExit:
         pass
     except:
